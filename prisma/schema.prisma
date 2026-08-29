@@ -1,0 +1,113 @@
+// Momozin — schema inicial (MVP)
+// Decisão adotada: pagamento único por página (não assinatura recorrente).
+// Cada GamePage "nasce" num plano (Free/Basico/Premium) que define seus limites
+// no momento da criação/compra. Se decidir migrar pra assinatura recorrente,
+// mova os limites (maxPhotos, maxHitMessages, etc.) para o model User.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanType {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  EXPIRED
+}
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  name          String?
+  passwordHash  String? // null se usuário entrou via OAuth
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  gamePages     GamePage[]
+  payments      Payment[]
+}
+
+model GamePage {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  status        PageStatus  @default(DRAFT)
+  plan          PlanType    @default(FREE)
+
+  requiredHits  Int         @default(8)
+  finalQuestion String      @default("Quer namorar comigo?")
+  finalSub      String      @default("Você é meu amor 💛")
+  acceptedTitle String      @default("Combinado! 💛")
+  acceptedSub   String      @default("Prometo fazer você feliz todos os dias.")
+
+  expiresAt     DateTime?   // null = sem expiração (planos pagos)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  targetPhotos  TargetPhoto[]
+  hitMessages   HitMessage[]
+  missMessages  MissMessage[]
+  payment       Payment?
+
+  @@index([userId])
+}
+
+model TargetPhoto {
+  id          String   @id @default(cuid())
+  url         String
+  order       Int      @default(0)
+
+  gamePageId  String
+  gamePage    GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
+
+  @@index([gamePageId])
+}
+
+model HitMessage {
+  id          String   @id @default(cuid())
+  text        String
+  order       Int      @default(0)
+
+  gamePageId  String
+  gamePage    GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
+
+  @@index([gamePageId])
+}
+
+model MissMessage {
+  id          String   @id @default(cuid())
+  text        String
+  order       Int      @default(0)
+
+  gamePageId  String
+  gamePage    GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
+
+  @@index([gamePageId])
+}
+
+model Payment {
+  id                String   @id @default(cuid())
+  stripeSessionId   String   @unique
+  amountCents       Int
+  currency          String   @default("brl")
+  status            String   // "pending" | "paid" | "failed"
+  createdAt         DateTime @default(now())
+
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  gamePageId        String   @unique
+  gamePage          GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
+}
