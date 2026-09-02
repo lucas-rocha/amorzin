@@ -14,8 +14,8 @@ datasource db {
 }
 
 enum PlanType {
-  FREE
-  BASIC
+  BASICO
+  SUPER
   PREMIUM
 }
 
@@ -41,7 +41,9 @@ model GamePage {
   id            String      @id @default(cuid())
   slug          String      @unique
   status        PageStatus  @default(DRAFT)
-  plan          PlanType    @default(FREE)
+  plan          PlanType    @default(BASICO)
+
+  loverName     String      @default("")
 
   requiredHits  Int         @default(8)
   finalQuestion String      @default("Quer namorar comigo?")
@@ -53,8 +55,8 @@ model GamePage {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   targetPhotos  TargetPhoto[]
   hitMessages   HitMessage[]
@@ -103,10 +105,13 @@ model Payment {
   amountCents       Int
   currency          String   @default("brl")
   status            String   // "pending" | "paid" | "failed"
+
+  payerEmail        String
+
   createdAt         DateTime @default(now())
 
-  userId            String
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String?
+  user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   gamePageId        String   @unique
   gamePage          GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)

@@ -1,5 +1,6 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
@@ -53,6 +54,12 @@ export default function CreateMomozinPage() {
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [isFinishing, setIsFinishing] = useState(false)
 
+
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('editId')
+  const [gamePageId, setGamePageId] = useState<string | null>(null)
+  const [isLoadingDraft, setIsLoadingDraft] = useState(!!editId)
+
   const [momozin, setMomozin] = useState<MomozinForm>({
     loverName: '',
     photos: defaultPhotos,
@@ -61,6 +68,26 @@ export default function CreateMomozinPage() {
     finalMessage: '',
     acceptButtonText: 'SIM! 💗',
   })
+  
+  useEffect(() => {
+    if (!editId) return
+
+    fetch(`/api/game-pages/edit/${editId}`)
+      .then((res) => res.json())
+      .then((draft) => {
+        setMomozin({
+          loverName: draft.loverName,
+          photos: draft.photos,
+          hitMessages: draft.hitMessages.length ? draft.hitMessages : defaultHitMessages,
+          missMessages: draft.missMessages.length ? draft.missMessages : defaultMissMessages,
+          finalMessage: draft.finalMessage,
+          acceptButtonText: draft.acceptButtonText,
+        })
+        setGamePageId(editId)
+        setIsLoadingDraft(false)
+      })
+  }, [editId])
+
 
   // --- plano: derivado ao vivo da quantidade de fotos ---
   const eligiblePlans = useMemo(
@@ -157,43 +184,42 @@ export default function CreateMomozinPage() {
 
   async function handleFinish() {
     if (isFinishing) return
-
-    if (!momozin.loverName.trim()) {
-      setCurrentStep(1)
-      return
-    }
-
-    if (!momozin.finalMessage.trim()) {
-      setCurrentStep(4)
-      return
-    }
+    if (!momozin.loverName.trim()) { setCurrentStep(1); return }
+    if (!momozin.finalMessage.trim()) { setCurrentStep(4); return }
 
     setIsFinishing(true)
 
-    const slug = generateSlug(momozin.loverName)
+    try {
+      const payload = {
+        loverName: momozin.loverName,
+        photos: momozin.photos,
+        hitMessages: momozin.hitMessages,
+        missMessages: momozin.missMessages,
+        finalMessage: momozin.finalMessage,
+        acceptButtonText: momozin.acceptButtonText,
+      }
 
-    const momozinData = {
-      slug,
-      loverName: momozin.loverName,
-      plan: selectedPlan,
+      const res = gamePageId
+        ? await fetch(`/api/game-pages/edit/${gamePageId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
+        : await fetch('/api/game-pages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          })
 
-      targetPhotoUrl: momozin.photos[0] ?? null,
-      couplePhotoUrls: momozin.photos,
+      if (!res.ok) throw new Error('Falha ao salvar')
+      const { id } = await res.json()
 
-      hitMessages: momozin.hitMessages.filter(Boolean),
-      missMessages: momozin.missMessages.filter(Boolean),
-
-      finalQuestion: momozin.finalMessage,
-      finalSub: '',
-      acceptedTitle: 'Você disse SIM! 💗',
-      acceptedSub: 'Agora vocês têm uma história para continuar juntos.',
+      router.push(`/preview/${id}`)
+    } catch (err) {
+      console.error(err)
+      setIsFinishing(false)
     }
-
-    localStorage.setItem(`momozin:${slug}`, JSON.stringify(momozinData))
-
-    router.push(`/p/${slug}`)
   }
-
   return (
     <main className="min-h-screen bg-[#FFFCFA] px-3 py-3 font-sans text-[#35131F] sm:px-5 sm:py-6">
       <div className="mx-auto flex min-h-[calc(100dvh-24px)] items-center justify-center sm:min-h-[calc(100dvh-48px)]">

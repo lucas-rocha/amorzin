@@ -10,6 +10,16 @@ export default function PaymentScreen({
   momozin,
   onBack,
 }: PaymentScreenProps) {
+  async function handlePay() {
+    const res = await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gamePageId: momozin.id, plan: momozin.plan }),
+    });
+    const { url } = await res.json();
+    window.location.href = url; // Stripe hospeda a página de pagamento
+  }
+
   return (
     <main className="min-h-screen bg-[#FFFCFA] px-4 py-6">
       <div className="mx-auto flex min-h-[calc(100vh-48px)] w-full max-w-md items-center justify-center">
@@ -64,6 +74,7 @@ export default function PaymentScreen({
           <button
             type="button"
             className="mt-6 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#E6395B] text-sm font-bold text-white shadow-[0_8px_24px_rgba(230,57,91,0.22)] transition hover:bg-[#D62F50] active:scale-[0.98]"
+            onClick={() => handlePay()}
           >
             <Share2 size={17} />
 

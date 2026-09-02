@@ -1,0 +1,16 @@
+services:
+  mozindb:
+    image: postgres:16-alpine
+    container_name: mozindb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=mozin_db
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - mozindb_data:/var/lib/postgresql
+
+volumes:
+  mozindb_data:
