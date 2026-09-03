@@ -56,17 +56,17 @@ export function getPlanLimits(plan: PlanType): PlanLimits {
   return PLAN_LIMITS[plan];
 }
 
-// Quais planos ainda cobrem essa quantidade de fotos
+// Básico e Super continuam sendo escolhidos por jogo, na tela de planos.
+// Premium não é mais "por jogo" — vira o preço da conta (ver checkout/premium-account).
 export function getEligiblePlans(photoCount: number): PlanType[] {
-  return (Object.keys(PLAN_LIMITS) as PlanType[]).filter(
+  return (["BASICO", "SUPER"] as PlanType[]).filter(
     (key) => photoCount <= PLAN_LIMITS[key].maxPhotos
   );
 }
 
-// Sugestão em tempo real (o mais barato entre os elegíveis)
 export function getRecommendedPlan(photoCount: number): PlanType {
   const eligible = getEligiblePlans(photoCount);
-  if (eligible.length === 0) return "PREMIUM"; // >10 fotos: só cabe ajustando o teto de fotos
+  if (eligible.length === 0) return "SUPER"; // teto de fotos do Super vira o limite geral pra quem não é premium
   return eligible.reduce((cheapest, key) =>
     PLAN_LIMITS[key].priceCents < PLAN_LIMITS[cheapest].priceCents ? key : cheapest
   );

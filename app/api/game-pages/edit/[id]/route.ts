@@ -1,6 +1,6 @@
-// app/api/game-pages/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,6 +15,19 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   });
 
   if (!page) return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  // nem devolve os dados pra edição se já não for mais rascunho
+  if (page.status !== "DRAFT") {
+    return NextResponse.json({ error: "already_published" }, { status: 409 });
+  }
+
+  if (page.userId) {
+    const user = await getCurrentUser();
+    if (!user || user.id !== page.userId) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+  }
+  
 
   return NextResponse.json({
     loverName: page.loverName,

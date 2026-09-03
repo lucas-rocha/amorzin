@@ -46,21 +46,22 @@ export default function SignupPage() {
       return;
     }
 
-    const signInResult = await signIn("credentials", {
-      email: email.trim(),
-      password,
-      redirect: false,
-    });
-
-    setIsLoading(false);
+    // app/cadastro/page.tsx — troca o final do handleSubmit
+    const signInResult = await signIn("credentials", { email: email.trim(), password, redirect: false });
 
     if (signInResult?.error) {
-      // conta criada, mas o login automático falhou — manda pra tela de login
       router.push(`/entrar?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
 
-    router.push(callbackUrl);
+    // conta criada e logada — agora cobra a taxa única antes de liberar
+    const checkoutRes = await fetch("/api/checkout/premium-account", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callbackUrl }),
+    });
+    const { url } = await checkoutRes.json();
+    window.location.href = url;
   }
 
   return (

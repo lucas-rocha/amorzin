@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
 import { PlanType } from "@/lib/plans";
+import { getCurrentUser } from "@/lib/auth";
 
 interface CreateGamePageBody {
   loverName: string;
@@ -24,13 +25,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Adicione pelo menos uma foto" }, { status: 400 });
   }
 
+  const user = await getCurrentUser();
+
   const slug = generateSlug(body.loverName);
   const couplePhotos = body.photos.slice(1);
 
   const gamePage = await prisma.gamePage.create({
     data: {
       slug,
-      status: "DRAFT", // vira PUBLISHED só no webhook, após o pagamento confirmar
+      status: "DRAFT",
+      userId: user?.id,
       plan: body.plan,
       loverName: body.loverName,
       requiredHits: Math.max(couplePhotos.length, 1),

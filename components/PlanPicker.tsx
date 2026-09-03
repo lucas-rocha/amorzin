@@ -15,7 +15,7 @@ interface PlanPickerProps {
 }
 
 export function PlanPicker({ eligiblePlans, recommended, selected, onSelect }: PlanPickerProps) {
-  const allPlans: PlanType[] = ["BASICO", "SUPER", "PREMIUM"];
+  const allPlans: PlanType[] = ["BASICO", "SUPER"];
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -25,11 +25,20 @@ enum PageStatus {
   EXPIRED
 }
 
+enum PaymentType {
+  PAGE_UNLOCK      // Básico/Super — libera UM jogo específico
+  PREMIUM_ACCOUNT  // paga a conta uma vez, libera jogos ilimitados
+}
+
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
   name          String?
   passwordHash  String? // null se usuário entrou via OAuth
+
+  isPremiumMember  Boolean    @default(false) // true = pagou a conta, cria jogos sem pagar de novo
+  premiumSince     DateTime?
+
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -108,11 +117,13 @@ model Payment {
 
   payerEmail        String
 
+  type              PaymentType  @default(PAGE_UNLOCK)
+
   createdAt         DateTime @default(now())
 
   userId            String?
   user              User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  gamePageId        String   @unique
-  gamePage          GamePage @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
+  gamePageId        String?  @unique
+  gamePage          GamePage? @relation(fields: [gamePageId], references: [id], onDelete: Cascade)
 }

@@ -22,11 +22,14 @@ export async function POST(req: NextRequest) {
 
     let userId: string | null = null;
     let userEmail: string | undefined;
-    if (planConfig.requiresAccount) {
-      const user = await getCurrentUser();
-      if (!user) {
-        return NextResponse.json({ error: "Cadastro necessário para este plano" }, { status: 401 });
-      }
+
+    const user = await getCurrentUser();
+
+    if (planConfig.requiresAccount && !user) {
+      return NextResponse.json({ error: "Cadastro necessário para este plano" }, { status: 401 });
+    }
+
+    if (user) {
       userId = user.id;
       userEmail = user.email;
     }
@@ -45,8 +48,8 @@ export async function POST(req: NextRequest) {
       ],
       customer_email: userEmail,
       metadata: { gamePageId, plan, userId: userId ?? "" },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/p/${gamePage.slug}?paid=1`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/p/${gamePage.slug}?canceled=1`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/compartilhar/${gamePage.slug}?paid=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/preview/${gamePageId}`,
     });
 
     return NextResponse.json({ url: session.url });

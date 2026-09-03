@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Check,
   Heart,
+  Link,
   Minus,
   Plus,
   Sparkles,
@@ -59,6 +60,7 @@ export default function CreateMomozinPage() {
   const editId = searchParams.get('editId')
   const [gamePageId, setGamePageId] = useState<string | null>(null)
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!editId)
+  const [editBlocked, setEditBlocked] = useState(false)
 
   const [momozin, setMomozin] = useState<MomozinForm>({
     loverName: '',
@@ -69,12 +71,20 @@ export default function CreateMomozinPage() {
     acceptButtonText: 'SIM! 💗',
   })
   
+
   useEffect(() => {
     if (!editId) return
 
     fetch(`/api/game-pages/edit/${editId}`)
-      .then((res) => res.json())
-      .then((draft) => {
+      .then(async (res) => {
+        if (res.status === 409) {
+          setEditBlocked(true)
+          setIsLoadingDraft(false)
+          return
+        }
+        if (!res.ok) throw new Error('not found')
+
+        const draft = await res.json()
         setMomozin({
           loverName: draft.loverName,
           photos: draft.photos,
@@ -86,6 +96,7 @@ export default function CreateMomozinPage() {
         setGamePageId(editId)
         setIsLoadingDraft(false)
       })
+      .catch(() => setIsLoadingDraft(false))
   }, [editId])
 
 
@@ -220,8 +231,33 @@ export default function CreateMomozinPage() {
       setIsFinishing(false)
     }
   }
+  if (editBlocked) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA] px-4">
+        <div className="max-w-sm text-center">
+          <p className="text-sm text-[#35131F]">
+            Esse Momozin já foi publicado e não pode mais ser editado — ele já pode ter sido
+            compartilhado com alguém. 💛
+          </p>
+          <Link href="/criar" className="mt-4 inline-block text-sm font-semibold text-[#E6395B] hover:underline">
+            Criar um novo
+          </Link>
+        </div>
+      </main>
+    )
+  }
+
+  if (isLoadingDraft) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
+        <p className="text-sm text-[#35131F]">Carregando seu rascunho...</p>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-screen bg-[#FFFCFA] px-3 py-3 font-sans text-[#35131F] sm:px-5 sm:py-6">
+      
       <div className="mx-auto flex min-h-[calc(100dvh-24px)] items-center justify-center sm:min-h-[calc(100dvh-48px)]">
         <div className="flex w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-[#35131F]/10 bg-[#FFFDFC] shadow-[0_15px_50px_rgba(53,19,31,0.06)] md:max-w-[1180px] md:min-h-[760px] md:flex-row md:rounded-[30px]">
           {/* SIDEBAR DESKTOP */}

@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { PlanPicker } from "@/components/PlanPicker";
-import { PlanType } from "@/lib/plans";
+import { PLAN_LIMITS, PlanType } from "@/lib/plans";
+import { useSession } from "next-auth/react";
 
 interface PlanosData {
   eligiblePlans: PlanType[];
@@ -13,6 +14,7 @@ interface PlanosData {
 }
 
 export default function PlanosClient({ gamePageId }: { gamePageId: string }) {
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [data, setData] = useState<PlanosData | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<PlanType | null>(null);
@@ -29,13 +31,28 @@ export default function PlanosClient({ gamePageId }: { gamePageId: string }) {
 
   async function handlePay() {
     if (!selectedPlan || isPaying) return;
-    setIsPaying(true);
 
+    const plan = PLAN_LIMITS[selectedPlan];
+
+    // Premium exige conta — só redireciona pro cadastro se NÃO houver sessão
+    if (plan.requiresAccount && !session?.user) {
+      router.push(`/cadastro?callbackUrl=${encodeURIComponent(`/preview/${gamePageId}/planos?plan=${selectedPlan}`)}`);
+      return;
+    }
+
+    setIsPaying(true);
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gamePageId, plan: selectedPlan }),
     });
+
+    if (res.status === 401) {
+      // rede de segurança, caso a sessão tenha expirado entre o clique e a resposta
+      router.push(`/cadastro?callbackUrl=${encodeURIComponent(`/preview/${gamePageId}/planos?plan=${selectedPlan}`)}`);
+      return;
+    }
+
     const { url } = await res.json();
     window.location.href = url;
   }
