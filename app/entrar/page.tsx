@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { ArrowLeft, Lock, Mail } from "lucide-react";
 import Link from "next/link";
+import { GoogleSignInButton } from "@/components/GoogleSignInButton";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -56,12 +57,20 @@ export default function LoginPage() {
             Voltar
           </Link>
 
-          <div className="text-center">
+          <div className="text-center mb-2">
             <div className="font-serif text-xl font-bold text-[#35131F]">🏹 Momozin</div>
             <h1 className="mt-4 font-serif text-2xl font-bold text-[#35131F]">Entrar na sua conta</h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#8F747C]">
               Acesse pra gerenciar seus Momozins.
             </p>
+          </div>
+
+          <GoogleSignInButton callbackUrl={callbackUrl} />
+
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-[#E8DADD]" />
+            <span className="text-[10px] font-medium text-[#A1888F]">ou com e-mail</span>
+            <div className="h-px flex-1 bg-[#E8DADD]" />
           </div>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">

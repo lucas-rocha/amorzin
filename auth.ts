@@ -1,6 +1,7 @@
 // auth.ts (raiz do projeto)
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
@@ -15,6 +16,7 @@ export const {
     signIn: "/entrar",
   },
   providers: [
+    Google, // lê AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET automaticamente
     Credentials({
       credentials: {
         email: { label: "E-mail", type: "email" },
@@ -26,7 +28,7 @@ export const {
         if (!email || !password) return null;
 
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user || !user.passwordHash) return null;
+        if (!user || !user.passwordHash) return null; // conta Google não tem senha
 
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
@@ -41,20 +43,39 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // login acabou de acontecer — o `user` já veio completo do authorize()
-        token.id = user.id as string;
+    async jwt({ token, user, account }) {
+      // login via Google (ou qualquer provider OAuth futuro)
+      if (account?.provider && account.provider !== "credentials" && user?.email) {
+        // encontra ou cria o User correspondente pelo e-mail — sem senha,
+        // já que a autenticação foi feita pelo Google
+        const dbUser = await prisma.user.upsert({
+          where: { email: user.email },
+          update: { name: user.name ?? undefined },
+          create: { email: user.email, name: user.name ?? undefined, passwordHash: null },
+        });
+
+        token.id = dbUser.id;
+        token.isPremiumMember = dbUser.isPremiumMember;
+        return token;
+      }
+
+      // login via Credentials — o `user` já vem completo do authorize()
+      if (user?.id) {
+        token.id = user.id;
         token.isPremiumMember = user.isPremiumMember ?? false;
-      } else if (token.id) {
-        // requisições seguintes: rebusca no banco, pra refletir se a pessoa
-        // virou Premium depois de já estar logada (ex: acabou de pagar)
+        return token;
+      }
+
+      // requisições seguintes: rebusca no banco, pra refletir mudanças
+      // (ex: virou Premium depois de já estar logado)
+      if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
           select: { isPremiumMember: true },
         });
         token.isPremiumMember = dbUser?.isPremiumMember ?? false;
       }
+
       return token;
     },
     async session({ session, token }) {

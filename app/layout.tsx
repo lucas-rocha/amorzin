@@ -13,10 +13,25 @@ const playfair = Playfair_Display({
   subsets: ['latin'],
 })
 
-
 export const metadata: Metadata = {
-  title: "Momozin",
-  description: "Crie um pedido de namoro ou compromisso interativo e surpreenda quem você ama."
+  title: "Momozin — crie um pedido de namoro que ela vai lembrar pra sempre",
+  description:
+    "Monte um jogo personalizado com suas fotos e mensagens e faça o pedido de namoro ou compromisso mais criativo. Grátis pra começar.",
+  keywords: ["pedido de namoro criativo", "jogo pedido de namoro", "surpresa namoro online", "pedido de compromisso"],
+  openGraph: {
+    title: "Momozin — o pedido de namoro que se joga",
+    description: "Suba fotos, escreva as mensagens e crie uma experiência interativa pra fazer seu pedido.",
+    url: process.env.NEXT_PUBLIC_BASE_URL,
+    siteName: "Momozin",
+    images: [{ url: "/og-landing.png", width: 1200, height: 630 }],
+    locale: "pt_BR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Momozin — o pedido de namoro que se joga",
+    images: ["/og-landing.png"],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
