@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { Calendar, ExternalLink, LogOut, Plus, Share2, Sparkles } from "lucide-react";
+import { Calendar, ExternalLink, LogOut, Plus, Share2, Sparkles, User } from "lucide-react";
 import { PLAN_LIMITS, PlanType } from "@/lib/plans";
 
 interface Game {
@@ -82,7 +82,15 @@ export default function DashboardClient({ games, userName }: DashboardClientProp
                 Virar Premium
               </button>
             )}
-
+            
+            <Link
+              href="/conta"
+              className="flex items-center gap-1.5 text-xs font-medium text-[#8F747C] transition hover:text-[#E6395B]"
+            >
+            <User size={14} />
+              Conta
+            </Link>
+            
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/" })}
