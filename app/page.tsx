@@ -17,7 +17,7 @@ export default function LandingPage() {
             href="#"
             className="font-serif text-sm font-bold text-[#35131F] transition-opacity hover:opacity-80 md:text-base"
           >
-            🏹 Momozin
+            🏹 Amorzin
           </a>
 
           {/* Navigation */}

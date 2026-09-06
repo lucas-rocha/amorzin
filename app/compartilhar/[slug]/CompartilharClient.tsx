@@ -88,7 +88,7 @@ export default function CompartilharClient({ slug }: { slug: string }) {
 
           <h1 className="font-serif text-2xl font-bold text-[#35131F]">Prontinho! 💛</h1>
           <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-[#8F747C]">
-            Seu Momozin está no ar. Também mandamos esse link
+            Seu Amorzin está no ar. Também mandamos esse link
             {data.payerEmail && (
               <>
                 {" "}

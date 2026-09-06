@@ -1,14 +1,13 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import NextLink from 'next/link'
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   Heart,
-  Link,
   Minus,
   Plus,
   Sparkles,
@@ -17,11 +16,35 @@ import {
 import { getEligiblePlans, getRecommendedPlan, PLAN_LIMITS, PlanType } from '@/lib/plans'
 import { uploadImageToR2 } from '@/lib/upload'
 
-type Step = 1 | 2 | 3 | 4
+const OCCASION_PRESETS = {
+  pedido: {
+    label: 'Pedido de namoro ou compromisso',
+    icon: '💍',
+    finalMessagePlaceholder: 'Quer namorar comigo? ❤️',
+    acceptButtonText: 'SIM! 💗',
+  },
+  surpresa: {
+    label: 'Surpresa pra quem já é seu par',
+    icon: '💌',
+    finalMessagePlaceholder: 'Só queria te lembrar o quanto te amo 💛',
+    acceptButtonText: 'Te amo também 💛',
+  },
+  data_especial: {
+    label: 'Celebrar uma data especial',
+    icon: '🎉',
+    finalMessagePlaceholder: 'Feliz mais um aninho juntos! Te amo cada dia mais 💛',
+    acceptButtonText: 'Muito obrigada(o) 💛',
+  },
+} as const
+
+type Occasion = keyof typeof OCCASION_PRESETS
+
+type Step = 1 | 2 | 3 | 4 | 5
 
 type MessageType = 'hitMessages' | 'missMessages'
 
 interface MomozinForm {
+  occasion?: Occasion
   loverName: string
   photos: string[]
   hitMessages: string[]
@@ -33,37 +56,28 @@ interface MomozinForm {
 const MAX_PHOTOS = 10
 const MAX_MESSAGES = 10
 
-const defaultPhotos = [
-  'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=500&q=85',
-  'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=500&q=85',
-  'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=500&q=85',
-]
-
 const defaultHitMessages = ['Sabia que você conseguiria! ❤️']
 const defaultMissMessages = ['Quase... tenta de novo 👀']
 
 function formatPrice(cents: number) {
-  return (cents / 100).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  })
+  return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
 export default function CreateMomozinPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('editId')
 
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [isFinishing, setIsFinishing] = useState(false)
 
-
-  const searchParams = useSearchParams()
-  const editId = searchParams.get('editId')
   const [gamePageId, setGamePageId] = useState<string | null>(null)
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!editId)
   const [editBlocked, setEditBlocked] = useState(false)
 
   const [momozin, setMomozin] = useState<MomozinForm>({
+    occasion: undefined,
     loverName: '',
     photos: [],
     hitMessages: defaultHitMessages,
@@ -71,8 +85,8 @@ export default function CreateMomozinPage() {
     finalMessage: '',
     acceptButtonText: 'SIM! 💗',
   })
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!editId) return
@@ -88,6 +102,7 @@ export default function CreateMomozinPage() {
 
         const draft = await res.json()
         setMomozin({
+          occasion: draft.occasion,
           loverName: draft.loverName,
           photos: draft.photos,
           hitMessages: draft.hitMessages.length ? draft.hitMessages : defaultHitMessages,
@@ -101,36 +116,27 @@ export default function CreateMomozinPage() {
       .catch(() => setIsLoadingDraft(false))
   }, [editId])
 
-
-  // --- plano: derivado ao vivo da quantidade de fotos ---
-  const eligiblePlans = useMemo(
-    () => getEligiblePlans(momozin.photos.length),
-    [momozin.photos.length],
-  )
-
-  const recommended = useMemo(
-    () => getRecommendedPlan(momozin.photos.length),
-    [momozin.photos.length],
-  )
-
+  const eligiblePlans = useMemo(() => getEligiblePlans(momozin.photos.length), [momozin.photos.length])
+  const recommended = useMemo(() => getRecommendedPlan(momozin.photos.length), [momozin.photos.length])
   const [selectedPlan, setSelectedPlan] = useState<PlanType>(recommended)
 
-  // se o plano escolhido deixou de ser elegível (ex: passou de 4 fotos
-  // com o Básico selecionado), pula pro recomendado automaticamente.
-  // se ainda for elegível, respeita a escolha manual da pessoa.
   useEffect(() => {
     if (!eligiblePlans.includes(selectedPlan)) {
       setSelectedPlan(recommended)
     }
   }, [eligiblePlans, recommended, selectedPlan])
 
-  const totalSteps = 4
+  const totalSteps = 5
   const progress = (currentStep / totalSteps) * 100
-
   const stepTitle = useMemo(() => getStepTitle(currentStep), [currentStep])
 
   function updateField<K extends keyof MomozinForm>(field: K, value: MomozinForm[K]) {
     setMomozin((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function selectOccasion(occasion: Occasion) {
+    const preset = OCCASION_PRESETS[occasion]
+    setMomozin((prev) => ({ ...prev, occasion, acceptButtonText: preset.acceptButtonText }))
   }
 
   function addMessage(type: MessageType) {
@@ -155,19 +161,19 @@ export default function CreateMomozinPage() {
   }
 
   async function addPhoto(file: File) {
-    if (momozin.photos.length >= MAX_PHOTOS) return;
+    if (momozin.photos.length >= MAX_PHOTOS) return
 
-    setIsUploadingPhoto(true);
-    setUploadError(null);
+    setIsUploadingPhoto(true)
+    setUploadError(null)
 
     try {
-      const url = await uploadImageToR2(file);
-      setMomozin((prev) => ({ ...prev, photos: [...prev.photos, url] }));
+      const url = await uploadImageToR2(file)
+      setMomozin((prev) => ({ ...prev, photos: [...prev.photos, url] }))
     } catch (err) {
-      console.error(err);
-      setUploadError("Não foi possível enviar a foto. Tenta de novo.");
+      console.error(err)
+      setUploadError('Não foi possível enviar a foto. Tenta de novo.')
     } finally {
-      setIsUploadingPhoto(false);
+      setIsUploadingPhoto(false)
     }
   }
 
@@ -181,7 +187,7 @@ export default function CreateMomozinPage() {
   }
 
   function nextStep() {
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       setCurrentStep((currentStep + 1) as Step)
       setActiveTab('edit')
     }
@@ -194,27 +200,17 @@ export default function CreateMomozinPage() {
     }
   }
 
-  function generateSlug(name: string) {
-    const normalized = name
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-
-    return `${normalized || 'meu-momozin'}-${Math.random().toString(36).substring(2, 7)}`
-  }
-
   async function handleFinish() {
     if (isFinishing) return
-    if (!momozin.loverName.trim()) { setCurrentStep(1); return }
-    if (!momozin.finalMessage.trim()) { setCurrentStep(4); return }
+    if (!momozin.occasion) { setCurrentStep(1); return }
+    if (!momozin.loverName.trim()) { setCurrentStep(2); return }
+    if (!momozin.finalMessage.trim()) { setCurrentStep(5); return }
 
     setIsFinishing(true)
 
     try {
       const payload = {
+        occasion: momozin.occasion,
         loverName: momozin.loverName,
         photos: momozin.photos,
         hitMessages: momozin.hitMessages,
@@ -244,6 +240,7 @@ export default function CreateMomozinPage() {
       setIsFinishing(false)
     }
   }
+
   if (editBlocked) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA] px-4">
@@ -252,9 +249,9 @@ export default function CreateMomozinPage() {
             Esse Momozin já foi publicado e não pode mais ser editado — ele já pode ter sido
             compartilhado com alguém. 💛
           </p>
-          <Link href="/criar" className="mt-4 inline-block text-sm font-semibold text-[#E6395B] hover:underline">
+          <NextLink href="/criar" className="mt-4 inline-block text-sm font-semibold text-[#E6395B] hover:underline">
             Criar um novo
-          </Link>
+          </NextLink>
         </div>
       </main>
     )
@@ -270,7 +267,6 @@ export default function CreateMomozinPage() {
 
   return (
     <main className="min-h-screen bg-[#FFFCFA] px-3 py-3 font-sans text-[#35131F] sm:px-5 sm:py-6">
-      
       <div className="mx-auto flex min-h-[calc(100dvh-24px)] items-center justify-center sm:min-h-[calc(100dvh-48px)]">
         <div className="flex w-full max-w-[430px] flex-col overflow-hidden rounded-[24px] border border-[#35131F]/10 bg-[#FFFDFC] shadow-[0_15px_50px_rgba(53,19,31,0.06)] md:max-w-[1180px] md:min-h-[760px] md:flex-row md:rounded-[30px]">
           {/* SIDEBAR DESKTOP */}
@@ -285,10 +281,11 @@ export default function CreateMomozinPage() {
             </div>
 
             <div className="space-y-2">
-              <StepItem number="1" title="Quem você quer conquistar" completed={currentStep > 1} active={currentStep === 1} onClick={() => goToStep(1)} />
-              <StepItem number="2" title="Fotos do casal" completed={currentStep > 2} active={currentStep === 2} onClick={() => goToStep(2)} />
-              <StepItem number="3" title="Mensagens" completed={currentStep > 3} active={currentStep === 3} onClick={() => goToStep(3)} />
-              <StepItem number="4" title="O pedido final" active={currentStep === 4} onClick={() => goToStep(4)} />
+              <StepItem number="1" title="Qual é o motivo?" completed={currentStep > 1} active={currentStep === 1} onClick={() => goToStep(1)} />
+              <StepItem number="2" title="Quem você quer conquistar" completed={currentStep > 2} active={currentStep === 2} onClick={() => goToStep(2)} />
+              <StepItem number="3" title="Fotos do casal" completed={currentStep > 3} active={currentStep === 3} onClick={() => goToStep(3)} />
+              <StepItem number="4" title="Mensagens" completed={currentStep > 4} active={currentStep === 4} onClick={() => goToStep(4)} />
+              <StepItem number="5" title="O pedido final" active={currentStep === 5} onClick={() => goToStep(5)} />
             </div>
 
             <div className="mt-auto">
@@ -371,19 +368,25 @@ export default function CreateMomozinPage() {
               ) : (
                 <div className="mx-auto max-w-[720px]">
                   {currentStep === 1 && (
-                    <StepOne loverName={momozin.loverName} onChange={(value) => updateField('loverName', value)} />
+                    <StepZero occasion={momozin.occasion} onSelect={selectOccasion} />
                   )}
 
                   {currentStep === 2 && (
+                    <StepOne loverName={momozin.loverName} onChange={(value) => updateField('loverName', value)} />
+                  )}
+
+                  {currentStep === 3 && (
                     <StepTwo
                       photos={momozin.photos}
                       onAdd={addPhoto}
                       onRemove={removePhoto}
                       recommended={recommended}
+                      isUploading={isUploadingPhoto}
+                      uploadError={uploadError}
                     />
                   )}
 
-                  {currentStep === 3 && (
+                  {currentStep === 4 && (
                     <StepThree
                       hitMessages={momozin.hitMessages}
                       missMessages={momozin.missMessages}
@@ -393,11 +396,12 @@ export default function CreateMomozinPage() {
                     />
                   )}
 
-                  {currentStep === 4 && (
+                  {currentStep === 5 && (
                     <>
                       <StepFour
                         finalMessage={momozin.finalMessage}
                         acceptButtonText={momozin.acceptButtonText}
+                        placeholder={OCCASION_PRESETS[momozin.occasion ?? 'pedido'].finalMessagePlaceholder}
                         onFinalMessageChange={(value) => updateField('finalMessage', value)}
                         onButtonTextChange={(value) => updateField('acceptButtonText', value)}
                       />
@@ -428,7 +432,7 @@ export default function CreateMomozinPage() {
                   Voltar
                 </button>
 
-                {currentStep < 4 ? (
+                {currentStep < 5 ? (
                   <button
                     type="button"
                     onClick={nextStep}
@@ -454,6 +458,47 @@ export default function CreateMomozinPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+/* ===============================================================
+   STEP 0 — MOTIVO
+================================================================ */
+
+interface StepZeroProps {
+  occasion?: Occasion
+  onSelect: (occasion: Occasion) => void
+}
+
+function StepZero({ occasion, onSelect }: StepZeroProps) {
+  return (
+    <div>
+      <StepHeader
+        title="Qual é o motivo?"
+        description="Isso ajusta as mensagens padrão pra combinar com o momento — você pode editar tudo depois."
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {(Object.keys(OCCASION_PRESETS) as Occasion[]).map((key) => {
+          const preset = OCCASION_PRESETS[key]
+          const isSelected = occasion === key
+
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onSelect(key)}
+              className={`rounded-2xl border p-5 text-center transition ${
+                isSelected ? 'border-[#E6395B] bg-[#FFF5F7]' : 'border-[#E8DADD] bg-white hover:border-[#D7BEC4]'
+              }`}
+            >
+              <div className="text-2xl">{preset.icon}</div>
+              <div className="mt-2 text-xs font-semibold text-[#35131F]">{preset.label}</div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -492,22 +537,22 @@ function StepOne({ loverName, onChange }: StepOneProps) {
 ================================================================ */
 
 interface StepTwoProps {
-  photos: string[];
-  onAdd: (file: File) => void;
-  onRemove: (index: number) => void;
-  recommended: PlanType;
-  isUploading: boolean;
-  uploadError: string | null;
+  photos: string[]
+  onAdd: (file: File) => void
+  onRemove: (index: number) => void
+  recommended: PlanType
+  isUploading: boolean
+  uploadError: string | null
 }
 
 function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadError }: StepTwoProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const basicLimit = PLAN_LIMITS.BASICO.maxPhotos;
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const basicLimit = PLAN_LIMITS.BASICO.maxPhotos
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) onAdd(file);
-    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois, se precisar
+    const file = e.target.files?.[0]
+    if (file) onAdd(file)
+    e.target.value = ''
   }
 
   return (
@@ -517,7 +562,7 @@ function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadErro
           <Check size={10} strokeWidth={3} className="text-white" />
         </div>
         <span className="text-[10px] font-medium text-[#5DAD86] md:text-xs">
-          Foto de quem você quer conquistar
+          Motivo e nome já definidos
         </span>
       </div>
 
@@ -557,19 +602,13 @@ function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadErro
               {isUploading ? (
                 <span className="text-[9px] font-semibold text-[#E6395B]">enviando...</span>
               ) : (
-                <Plus
-                  size={18}
-                  strokeWidth={1.5}
-                  className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6"
-                />
+                <Plus size={18} strokeWidth={1.5} className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6" />
               )}
             </button>
           )}
         </div>
 
-        {uploadError && (
-          <p className="mt-2 text-[10px] font-medium text-[#E6395B]">{uploadError}</p>
-        )}
+        {uploadError && <p className="mt-2 text-[10px] font-medium text-[#E6395B]">{uploadError}</p>}
 
         <div className="mt-3 text-[9px] text-[#B28F98] md:mt-4 md:text-[10px]">
           {photos.length} de {MAX_PHOTOS} fotos adicionadas
@@ -582,7 +621,7 @@ function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadErro
         )}
       </div>
     </div>
-  );
+  )
 }
 
 /* ===============================================================
@@ -636,11 +675,12 @@ function StepThree({ hitMessages, missMessages, onChange, onAdd, onRemove }: Ste
 interface StepFourProps {
   finalMessage: string
   acceptButtonText: string
+  placeholder: string
   onFinalMessageChange: (value: string) => void
   onButtonTextChange: (value: string) => void
 }
 
-function StepFour({ finalMessage, acceptButtonText, onFinalMessageChange, onButtonTextChange }: StepFourProps) {
+function StepFour({ finalMessage, acceptButtonText, placeholder, onFinalMessageChange, onButtonTextChange }: StepFourProps) {
   return (
     <div>
       <StepHeader title="O pedido final" description="Agora é a hora de preparar a mensagem que aparece no final." />
@@ -662,7 +702,7 @@ function StepFour({ finalMessage, acceptButtonText, onFinalMessageChange, onButt
           value={finalMessage}
           onChange={(event) => onFinalMessageChange(event.target.value)}
           maxLength={300}
-          placeholder="Quer namorar comigo? ❤️"
+          placeholder={placeholder}
           className="mt-2 w-full resize-none rounded-xl border border-[#E8DADD] bg-[#FFFDFC] px-4 py-3 text-xs leading-5 outline-none transition placeholder:text-[#C4B3B8] focus:border-[#E6395B] focus:ring-4 focus:ring-[#E6395B]/10"
         />
         <div className="mt-2 text-right text-[9px] text-[#B28F98]">{finalMessage.length} / 300 caracteres</div>
@@ -734,9 +774,7 @@ function PlanPicker({ eligiblePlans, recommended, selected, onSelect }: PlanPick
               {plan.requiresAccount && ' · requer conta'}
               {plan.multiGame && ' · gerencia vários jogos'}
             </div>
-            {disabled && (
-              <div className="mt-2 text-[9px] font-semibold text-[#E6395B]">fotos demais pra esse plano</div>
-            )}
+            {disabled && <div className="mt-2 text-[9px] font-semibold text-[#E6395B]">fotos demais pra esse plano</div>}
           </button>
         )
       })}
@@ -966,13 +1004,10 @@ function Preview({ momozin }: PreviewProps) {
 
 function getStepTitle(step: Step) {
   switch (step) {
-    case 1:
-      return 'Quem você quer conquistar'
-    case 2:
-      return 'Fotos do casal'
-    case 3:
-      return 'Mensagens'
-    case 4:
-      return 'O pedido final'
+    case 1: return 'Qual é o motivo?'
+    case 2: return 'Quem você quer conquistar'
+    case 3: return 'Fotos do casal'
+    case 4: return 'Mensagens'
+    case 5: return 'O pedido final'
   }
 }
