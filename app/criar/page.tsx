@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { getEligiblePlans, getRecommendedPlan, PLAN_LIMITS, PlanType } from '@/lib/plans'
+import { uploadImageToR2 } from '@/lib/upload'
 
 type Step = 1 | 2 | 3 | 4
 
@@ -64,13 +65,14 @@ export default function CreateMomozinPage() {
 
   const [momozin, setMomozin] = useState<MomozinForm>({
     loverName: '',
-    photos: defaultPhotos,
+    photos: [],
     hitMessages: defaultHitMessages,
     missMessages: defaultMissMessages,
     finalMessage: '',
     acceptButtonText: 'SIM! 💗',
   })
-  
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!editId) return
@@ -152,10 +154,21 @@ export default function CreateMomozinPage() {
     }))
   }
 
-  function addPhoto() {
-    if (momozin.photos.length >= MAX_PHOTOS) return
-    const nextPhoto = defaultPhotos[momozin.photos.length % defaultPhotos.length]
-    setMomozin((prev) => ({ ...prev, photos: [...prev.photos, nextPhoto] }))
+  async function addPhoto(file: File) {
+    if (momozin.photos.length >= MAX_PHOTOS) return;
+
+    setIsUploadingPhoto(true);
+    setUploadError(null);
+
+    try {
+      const url = await uploadImageToR2(file);
+      setMomozin((prev) => ({ ...prev, photos: [...prev.photos, url] }));
+    } catch (err) {
+      console.error(err);
+      setUploadError("Não foi possível enviar a foto. Tenta de novo.");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   }
 
   function removePhoto(index: number) {
@@ -479,14 +492,23 @@ function StepOne({ loverName, onChange }: StepOneProps) {
 ================================================================ */
 
 interface StepTwoProps {
-  photos: string[]
-  onAdd: () => void
-  onRemove: (index: number) => void
-  recommended: PlanType
+  photos: string[];
+  onAdd: (file: File) => void;
+  onRemove: (index: number) => void;
+  recommended: PlanType;
+  isUploading: boolean;
+  uploadError: string | null;
 }
 
-function StepTwo({ photos, onAdd, onRemove, recommended }: StepTwoProps) {
-  const basicLimit = PLAN_LIMITS.BASICO.maxPhotos
+function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadError }: StepTwoProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const basicLimit = PLAN_LIMITS.BASICO.maxPhotos;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) onAdd(file);
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois, se precisar
+  }
 
   return (
     <div>
@@ -512,6 +534,14 @@ function StepTwo({ photos, onAdd, onRemove, recommended }: StepTwoProps) {
           </span>
         </div>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+
         <div className="flex flex-wrap gap-2.5 md:gap-4">
           {photos.map((photo, index) => (
             <PhotoItem key={`${photo}-${index}`} src={photo} index={index} onRemove={() => onRemove(index)} />
@@ -520,13 +550,26 @@ function StepTwo({ photos, onAdd, onRemove, recommended }: StepTwoProps) {
           {photos.length < MAX_PHOTOS && (
             <button
               type="button"
-              onClick={onAdd}
-              className="group flex h-[53px] w-[53px] items-center justify-center rounded-[11px] border border-dashed border-[#E6395B]/40 bg-white transition-all hover:border-[#E6395B] hover:bg-[#FFF5F7] active:scale-95 md:h-[90px] md:w-[90px] md:rounded-[16px]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="group flex h-[53px] w-[53px] items-center justify-center rounded-[11px] border border-dashed border-[#E6395B]/40 bg-white transition-all hover:border-[#E6395B] hover:bg-[#FFF5F7] active:scale-95 disabled:cursor-wait disabled:opacity-50 md:h-[90px] md:w-[90px] md:rounded-[16px]"
             >
-              <Plus size={18} strokeWidth={1.5} className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6" />
+              {isUploading ? (
+                <span className="text-[9px] font-semibold text-[#E6395B]">enviando...</span>
+              ) : (
+                <Plus
+                  size={18}
+                  strokeWidth={1.5}
+                  className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6"
+                />
+              )}
             </button>
           )}
         </div>
+
+        {uploadError && (
+          <p className="mt-2 text-[10px] font-medium text-[#E6395B]">{uploadError}</p>
+        )}
 
         <div className="mt-3 text-[9px] text-[#B28F98] md:mt-4 md:text-[10px]">
           {photos.length} de {MAX_PHOTOS} fotos adicionadas
@@ -539,7 +582,7 @@ function StepTwo({ photos, onAdd, onRemove, recommended }: StepTwoProps) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 /* ===============================================================

@@ -4,6 +4,7 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { PLAN_LIMITS, PlanType } from "@/lib/plans";
 import Stripe from "stripe";
+import { sendGameLinkEmail, sendPremiumWelcomeEmail } from "@/lib/emai";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -45,6 +46,8 @@ export async function POST(req: NextRequest) {
         }),
       ]);
 
+      await sendPremiumWelcomeEmail(session.customer_details?.email ?? metadata.userId);
+
       return NextResponse.json({ received: true });
     }
 
@@ -74,6 +77,15 @@ export async function POST(req: NextRequest) {
         data: { status: "PUBLISHED", plan, expiresAt, userId: userId || undefined },
       });
     });
+
+    const gamePage = await prisma.gamePage.findUnique({ where: { id: gamePageId } });
+    if (gamePage) {
+      await sendGameLinkEmail(
+        session.customer_details?.email ?? "",
+        `${process.env.NEXT_PUBLIC_BASE_URL}/p/${gamePage.slug}`,
+        gamePage.loverName
+      );
+    }
   }
 
   return NextResponse.json({ received: true });
