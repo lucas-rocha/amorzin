@@ -59,7 +59,7 @@ export function getPlanLimits(plan: PlanType): PlanLimits {
 // Básico e Super continuam sendo escolhidos por jogo, na tela de planos.
 // Premium não é mais "por jogo" — vira o preço da conta (ver checkout/premium-account).
 export function getEligiblePlans(photoCount: number): PlanType[] {
-  return (["BASICO", "SUPER"] as PlanType[]).filter(
+  return (["BASICO", "SUPER", "PREMIUM"] as PlanType[]).filter(
     (key) => photoCount <= PLAN_LIMITS[key].maxPhotos
   );
 }

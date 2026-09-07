@@ -1,4 +1,3 @@
-// components/PlanPicker.tsx
 "use client";
 
 import { PLAN_LIMITS, PlanType } from "@/lib/plans";
@@ -15,7 +14,7 @@ interface PlanPickerProps {
 }
 
 export function PlanPicker({ eligiblePlans, recommended, selected, onSelect }: PlanPickerProps) {
-  const allPlans: PlanType[] = ["BASICO", "SUPER"];
+  const allPlans: PlanType[] = ["BASICO", "SUPER", "PREMIUM"];
 
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">

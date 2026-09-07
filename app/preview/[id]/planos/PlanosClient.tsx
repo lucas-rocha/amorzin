@@ -32,27 +32,43 @@ export default function PlanosClient({ gamePageId }: { gamePageId: string }) {
   async function handlePay() {
     if (!selectedPlan || isPaying) return;
 
-    const plan = PLAN_LIMITS[selectedPlan];
+    if (selectedPlan === "PREMIUM") {
+      // já é Premium? publica direto, sem cobrar de novo
+      if (session?.user?.isPremiumMember) {
+        setIsPaying(true);
+        const res = await fetch(`/api/game-pages/publish/${gamePageId}`, { method: "POST" });
+        const { slug } = await res.json();
+        router.push(`/compartilhar/${slug}`);
+        return;
+      }
 
-    // Premium exige conta — só redireciona pro cadastro se NÃO houver sessão
-    if (plan.requiresAccount && !session?.user) {
-      router.push(`/cadastro?callbackUrl=${encodeURIComponent(`/preview/${gamePageId}/planos?plan=${selectedPlan}`)}`);
+      // não tem conta ainda → cria conta, e ela já cobra a taxa Premium sozinha
+      if (!session?.user) {
+        router.push(
+          `/cadastro?callbackUrl=${encodeURIComponent(`/preview/${gamePageId}/claim-premium`)}`
+        );
+        return;
+      }
+
+      // tem conta, mas ainda não é Premium → paga a conta agora
+      setIsPaying(true);
+      const res = await fetch("/api/checkout/premium-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callbackUrl: `/preview/${gamePageId}/claim-premium` }),
+      });
+      const { url } = await res.json();
+      window.location.href = url;
       return;
     }
 
+    // Básico/Super — fluxo por jogo, exatamente como já estava
     setIsPaying(true);
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gamePageId, plan: selectedPlan }),
     });
-
-    if (res.status === 401) {
-      // rede de segurança, caso a sessão tenha expirado entre o clique e a resposta
-      router.push(`/cadastro?callbackUrl=${encodeURIComponent(`/preview/${gamePageId}/planos?plan=${selectedPlan}`)}`);
-      return;
-    }
-
     const { url } = await res.json();
     window.location.href = url;
   }

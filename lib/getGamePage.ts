@@ -64,7 +64,7 @@ export async function getGamePageBySlug(slug: string): Promise<GamePageData | nu
       finalSub: page.finalSub,
       acceptedTitle: page.acceptedTitle,
       acceptedSub: page.acceptedSub,
-      showWatermark: page.plan === "FREE"
+      showWatermark: page.plan === "BASICO"
     };
   } catch {
     // Banco ainda não configurado/migrado — cai no modo demo em vez de derrubar a página.

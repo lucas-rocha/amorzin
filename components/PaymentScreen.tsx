@@ -17,7 +17,7 @@ export default function PaymentScreen({
       body: JSON.stringify({ gamePageId: momozin.id, plan: momozin.plan }),
     });
     const { url } = await res.json();
-    window.location.href = url; // Stripe hospeda a página de pagamento
+    window.location.href = url;
   }
 
   return (
