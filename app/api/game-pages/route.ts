@@ -1,4 +1,3 @@
-// app/api/game-pages/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
@@ -25,7 +24,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Adicione pelo menos uma foto" }, { status: 400 });
   }
 
-  const user = await getCurrentUser();
+  const user = await getCurrentUser() || null;
 
   const slug = generateSlug(body.loverName);
   const couplePhotos = body.photos.slice(1);

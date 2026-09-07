@@ -1,4 +1,4 @@
-import { Momozin } from "@/app/p/[slug]/page"
+import { Momozin } from "@/app/p/[slug]/MomozinSlugClient";
 import { ArrowLeft, CheckCircle2, Share2 } from "lucide-react"
 
 interface PaymentScreenProps {
