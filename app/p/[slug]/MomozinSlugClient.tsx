@@ -4,8 +4,12 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import CupidGame from "@/components/CupidGame";
+import { PlanType } from "@prisma/client";
 
 export interface Momozin {
+  id?: string;
+  plan?: PlanType;
+  loverName?: string; 
   slug: string;
   targetPhotoUrl?: string | null;
   couplePhotoUrls: string[];
