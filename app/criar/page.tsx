@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import NextLink from 'next/link'
 import {
   ArrowLeft,
@@ -63,7 +63,7 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-export default function CreateMomozinPage() {
+function CreateMomozinPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('editId')
@@ -458,6 +458,22 @@ export default function CreateMomozinPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function CreateMomozinPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
+          <p className="text-sm text-[#8F747C]">
+            Carregando...
+          </p>
+        </main>
+      }
+    >
+      <CreateMomozinPageContent />
+    </Suspense>
   )
 }
 
