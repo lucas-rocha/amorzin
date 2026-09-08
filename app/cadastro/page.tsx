@@ -1,15 +1,15 @@
-// app/cadastro/page.tsx
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { ArrowLeft, Lock, Mail, User } from "lucide-react";
 import Link from "next/link";
 
-export default function SignupPage() {
+function SignupPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
 
   const [name, setName] = useState("");
@@ -20,12 +20,14 @@ export default function SignupPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+
     setError(null);
 
     if (!email.trim() || !password) {
       setError("Preencha e-mail e senha.");
       return;
     }
+
     if (password.length < 8) {
       setError("A senha precisa ter pelo menos 8 caracteres.");
       return;
@@ -33,35 +35,75 @@ export default function SignupPage() {
 
     setIsLoading(true);
 
-    const registerRes = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() || undefined, email: email.trim(), password }),
-    });
+    try {
+      const registerRes = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: name.trim() || undefined,
+          email: email.trim(),
+          password,
+        }),
+      });
 
-    if (!registerRes.ok) {
-      const { error: apiError } = await registerRes.json();
-      setError(apiError ?? "Não foi possível criar sua conta.");
+      if (!registerRes.ok) {
+        const { error: apiError } = await registerRes.json();
+
+        setError(apiError ?? "Não foi possível criar sua conta.");
+        setIsLoading(false);
+        return;
+      }
+
+      const signInResult = await signIn("credentials", {
+        email: email.trim(),
+        password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        router.push(
+          `/entrar?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        );
+        return;
+      }
+
+      const checkoutRes = await fetch("/api/checkout/premium-account", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          callbackUrl,
+        }),
+      });
+
+      if (!checkoutRes.ok) {
+        const { error: checkoutError } = await checkoutRes.json();
+
+        setError(
+          checkoutError ??
+            "Conta criada, mas não foi possível iniciar o pagamento."
+        );
+
+        setIsLoading(false);
+        return;
+      }
+
+      const { url } = await checkoutRes.json();
+
+      if (!url) {
+        setError("Não foi possível iniciar o pagamento.");
+        setIsLoading(false);
+        return;
+      }
+
+      window.location.href = url;
+    } catch {
+      setError("Ocorreu um erro. Tente novamente.");
       setIsLoading(false);
-      return;
     }
-
-    // app/cadastro/page.tsx — troca o final do handleSubmit
-    const signInResult = await signIn("credentials", { email: email.trim(), password, redirect: false });
-
-    if (signInResult?.error) {
-      router.push(`/entrar?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-      return;
-    }
-
-    // conta criada e logada — agora cobra a taxa única antes de liberar
-    const checkoutRes = await fetch("/api/checkout/premium-account", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ callbackUrl }),
-    });
-    const { url } = await checkoutRes.json();
-    window.location.href = url;
   }
 
   return (
@@ -77,18 +119,32 @@ export default function SignupPage() {
           </Link>
 
           <div className="text-center">
-            <div className="font-serif text-xl font-bold text-[#35131F]">🏹 Momozin</div>
-            <h1 className="mt-4 font-serif text-2xl font-bold text-[#35131F]">Criar sua conta</h1>
+            <div className="font-serif text-xl font-bold text-[#35131F]">
+              🏹 Momozin
+            </div>
+
+            <h1 className="mt-4 font-serif text-2xl font-bold text-[#35131F]">
+              Criar sua conta
+            </h1>
+
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#8F747C]">
-              Necessário pro plano Premium — gerencie vários Momozins num só lugar.
+              Necessário pro plano Premium — gerencie vários Momozins num só
+              lugar.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[#35131F]">Nome (opcional)</label>
+              <label className="block text-xs font-semibold text-[#35131F]">
+                Nome (opcional)
+              </label>
+
               <div className="relative mt-2">
-                <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]" />
+                <User
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]"
+                />
+
                 <input
                   type="text"
                   value={name}
@@ -101,9 +157,16 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#35131F]">E-mail</label>
+              <label className="block text-xs font-semibold text-[#35131F]">
+                E-mail
+              </label>
+
               <div className="relative mt-2">
-                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]" />
+                <Mail
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]"
+                />
+
                 <input
                   type="email"
                   value={email}
@@ -116,9 +179,16 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#35131F]">Senha</label>
+              <label className="block text-xs font-semibold text-[#35131F]">
+                Senha
+              </label>
+
               <div className="relative mt-2">
-                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]" />
+                <Lock
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B9A3A9]"
+                />
+
                 <input
                   type="password"
                   value={password}
@@ -131,7 +201,9 @@ export default function SignupPage() {
             </div>
 
             {error && (
-              <p className="rounded-lg bg-[#FFE8EE] px-3 py-2 text-xs font-medium text-[#E6395B]">{error}</p>
+              <p className="rounded-lg bg-[#FFE8EE] px-3 py-2 text-xs font-medium text-[#E6395B]">
+                {error}
+              </p>
             )}
 
             <button
@@ -146,7 +218,11 @@ export default function SignupPage() {
           <p className="mt-6 text-center text-xs text-[#A1888F]">
             Já tem conta?{" "}
             <Link
-              href={`/entrar${callbackUrl !== "/dashboard" ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`}
+              href={`/entrar${
+                callbackUrl !== "/dashboard"
+                  ? `?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                  : ""
+              }`}
               className="font-semibold text-[#E6395B] hover:underline"
             >
               Entrar
@@ -155,5 +231,19 @@ export default function SignupPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
+          <div className="text-sm text-[#8F747C]">Carregando...</div>
+        </main>
+      }
+    >
+      <SignupPageContent />
+    </Suspense>
   );
 }
