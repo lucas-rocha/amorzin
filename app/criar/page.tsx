@@ -43,7 +43,7 @@ type Step = 1 | 2 | 3 | 4 | 5
 
 type MessageType = 'hitMessages' | 'missMessages'
 
-interface MomozinForm {
+interface AmorzinForm {
   occasion?: Occasion
   loverName: string
   photos: string[]
@@ -63,7 +63,7 @@ function formatPrice(cents: number) {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-function CreateMomozinPageContent() {
+function CreateAmorzinPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const editId = searchParams.get('editId')
@@ -76,7 +76,7 @@ function CreateMomozinPageContent() {
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!editId)
   const [editBlocked, setEditBlocked] = useState(false)
 
-  const [momozin, setMomozin] = useState<MomozinForm>({
+  const [Amorzin, setAmorzin] = useState<AmorzinForm>({
     occasion: undefined,
     loverName: '',
     photos: [],
@@ -101,7 +101,7 @@ function CreateMomozinPageContent() {
         if (!res.ok) throw new Error('not found')
 
         const draft = await res.json()
-        setMomozin({
+        setAmorzin({
           occasion: draft.occasion,
           loverName: draft.loverName,
           photos: draft.photos,
@@ -116,8 +116,8 @@ function CreateMomozinPageContent() {
       .catch(() => setIsLoadingDraft(false))
   }, [editId])
 
-  const eligiblePlans = useMemo(() => getEligiblePlans(momozin.photos.length), [momozin.photos.length])
-  const recommended = useMemo(() => getRecommendedPlan(momozin.photos.length), [momozin.photos.length])
+  const eligiblePlans = useMemo(() => getEligiblePlans(Amorzin.photos.length), [Amorzin.photos.length])
+  const recommended = useMemo(() => getRecommendedPlan(Amorzin.photos.length), [Amorzin.photos.length])
   const [selectedPlan, setSelectedPlan] = useState<PlanType>(recommended)
 
   useEffect(() => {
@@ -130,45 +130,45 @@ function CreateMomozinPageContent() {
   const progress = (currentStep / totalSteps) * 100
   const stepTitle = useMemo(() => getStepTitle(currentStep), [currentStep])
 
-  function updateField<K extends keyof MomozinForm>(field: K, value: MomozinForm[K]) {
-    setMomozin((prev) => ({ ...prev, [field]: value }))
+  function updateField<K extends keyof AmorzinForm>(field: K, value: AmorzinForm[K]) {
+    setAmorzin((prev) => ({ ...prev, [field]: value }))
   }
 
   function selectOccasion(occasion: Occasion) {
     const preset = OCCASION_PRESETS[occasion]
-    setMomozin((prev) => ({ ...prev, occasion, acceptButtonText: preset.acceptButtonText }))
+    setAmorzin((prev) => ({ ...prev, occasion, acceptButtonText: preset.acceptButtonText }))
   }
 
   function addMessage(type: MessageType) {
-    setMomozin((prev) => {
+    setAmorzin((prev) => {
       if (prev[type].length >= MAX_MESSAGES) return prev
       return { ...prev, [type]: [...prev[type], ''] }
     })
   }
 
   function removeMessage(type: MessageType, index: number) {
-    setMomozin((prev) => {
+    setAmorzin((prev) => {
       if (prev[type].length <= 1) return prev
       return { ...prev, [type]: prev[type].filter((_, i) => i !== index) }
     })
   }
 
   function updateMessage(type: MessageType, index: number, value: string) {
-    setMomozin((prev) => ({
+    setAmorzin((prev) => ({
       ...prev,
       [type]: prev[type].map((message, i) => (i === index ? value : message)),
     }))
   }
 
   async function addPhoto(file: File) {
-    if (momozin.photos.length >= MAX_PHOTOS) return
+    if (Amorzin.photos.length >= MAX_PHOTOS) return
 
     setIsUploadingPhoto(true)
     setUploadError(null)
 
     try {
       const url = await uploadImageToR2(file)
-      setMomozin((prev) => ({ ...prev, photos: [...prev.photos, url] }))
+      setAmorzin((prev) => ({ ...prev, photos: [...prev.photos, url] }))
     } catch (err) {
       console.error(err)
       setUploadError('Não foi possível enviar a foto. Tenta de novo.')
@@ -178,7 +178,7 @@ function CreateMomozinPageContent() {
   }
 
   function removePhoto(index: number) {
-    setMomozin((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }))
+    setAmorzin((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }))
   }
 
   function goToStep(step: Step) {
@@ -202,21 +202,21 @@ function CreateMomozinPageContent() {
 
   async function handleFinish() {
     if (isFinishing) return
-    if (!momozin.occasion) { setCurrentStep(1); return }
-    if (!momozin.loverName.trim()) { setCurrentStep(2); return }
-    if (!momozin.finalMessage.trim()) { setCurrentStep(5); return }
+    if (!Amorzin.occasion) { setCurrentStep(1); return }
+    if (!Amorzin.loverName.trim()) { setCurrentStep(2); return }
+    if (!Amorzin.finalMessage.trim()) { setCurrentStep(5); return }
 
     setIsFinishing(true)
 
     try {
       const payload = {
-        occasion: momozin.occasion,
-        loverName: momozin.loverName,
-        photos: momozin.photos,
-        hitMessages: momozin.hitMessages,
-        missMessages: momozin.missMessages,
-        finalMessage: momozin.finalMessage,
-        acceptButtonText: momozin.acceptButtonText,
+        occasion: Amorzin.occasion,
+        loverName: Amorzin.loverName,
+        photos: Amorzin.photos,
+        hitMessages: Amorzin.hitMessages,
+        missMessages: Amorzin.missMessages,
+        finalMessage: Amorzin.finalMessage,
+        acceptButtonText: Amorzin.acceptButtonText,
       }
 
       const res = gamePageId
@@ -246,7 +246,7 @@ function CreateMomozinPageContent() {
       <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA] px-4">
         <div className="max-w-sm text-center">
           <p className="text-sm text-[#35131F]">
-            Esse Momozin já foi publicado e não pode mais ser editado — ele já pode ter sido
+            Esse Amorzin já foi publicado e não pode mais ser editado — ele já pode ter sido
             compartilhado com alguém. 💛
           </p>
           <NextLink href="/criar" className="mt-4 inline-block text-sm font-semibold text-[#E6395B] hover:underline">
@@ -272,7 +272,7 @@ function CreateMomozinPageContent() {
           {/* SIDEBAR DESKTOP */}
           <aside className="hidden w-[270px] flex-shrink-0 flex-col border-r border-[#35131F]/[0.07] bg-[#FFF8F9] p-8 md:flex">
             <div className="mb-12">
-              <div className="font-serif text-xl font-bold text-[#35131F]">🏹 Momozin</div>
+              <div className="font-serif text-xl font-bold text-[#35131F]">🏹 Amorzin</div>
               <p className="mt-2 text-xs leading-5 text-[#9A7D85]">
                 Crie uma experiência
                 <br />
@@ -295,7 +295,7 @@ function CreateMomozinPageContent() {
                 </div>
                 <p className="text-xs font-bold text-[#35131F]">Você está quase lá! 💗</p>
                 <p className="mt-1.5 text-[10px] leading-5 text-[#9A7D85]">
-                  Mais algumas etapas para terminar seu Momozin.
+                  Mais algumas etapas para terminar seu Amorzin.
                 </p>
               </div>
             </div>
@@ -316,7 +316,7 @@ function CreateMomozinPageContent() {
                 </button>
 
                 <div className="flex-1 px-3 sm:px-5 md:px-6">
-                  <div className="text-[14px] font-bold text-[#35131F] md:text-lg">Novo Momozin</div>
+                  <div className="text-[14px] font-bold text-[#35131F] md:text-lg">Novo Amorzin</div>
                   <div className="mt-0.5 text-[10px] text-[#A1888F] md:text-xs">
                     Passo {currentStep} de {totalSteps} — {stepTitle}
                   </div>
@@ -364,20 +364,20 @@ function CreateMomozinPageContent() {
 
             <div className="flex-1 px-5 py-5 sm:px-7 md:px-10 md:py-10">
               {activeTab === 'preview' ? (
-                <Preview momozin={momozin} />
+                <Preview Amorzin={Amorzin} />
               ) : (
                 <div className="mx-auto max-w-[720px]">
                   {currentStep === 1 && (
-                    <StepZero occasion={momozin.occasion} onSelect={selectOccasion} />
+                    <StepZero occasion={Amorzin.occasion} onSelect={selectOccasion} />
                   )}
 
                   {currentStep === 2 && (
-                    <StepOne loverName={momozin.loverName} onChange={(value) => updateField('loverName', value)} />
+                    <StepOne loverName={Amorzin.loverName} onChange={(value) => updateField('loverName', value)} />
                   )}
 
                   {currentStep === 3 && (
                     <StepTwo
-                      photos={momozin.photos}
+                      photos={Amorzin.photos}
                       onAdd={addPhoto}
                       onRemove={removePhoto}
                       recommended={recommended}
@@ -388,8 +388,8 @@ function CreateMomozinPageContent() {
 
                   {currentStep === 4 && (
                     <StepThree
-                      hitMessages={momozin.hitMessages}
-                      missMessages={momozin.missMessages}
+                      hitMessages={Amorzin.hitMessages}
+                      missMessages={Amorzin.missMessages}
                       onChange={updateMessage}
                       onAdd={addMessage}
                       onRemove={removeMessage}
@@ -399,9 +399,9 @@ function CreateMomozinPageContent() {
                   {currentStep === 5 && (
                     <>
                       <StepFour
-                        finalMessage={momozin.finalMessage}
-                        acceptButtonText={momozin.acceptButtonText}
-                        placeholder={OCCASION_PRESETS[momozin.occasion ?? 'pedido'].finalMessagePlaceholder}
+                        finalMessage={Amorzin.finalMessage}
+                        acceptButtonText={Amorzin.acceptButtonText}
+                        placeholder={OCCASION_PRESETS[Amorzin.occasion ?? 'pedido'].finalMessagePlaceholder}
                         onFinalMessageChange={(value) => updateField('finalMessage', value)}
                         onButtonTextChange={(value) => updateField('acceptButtonText', value)}
                       />
@@ -448,7 +448,7 @@ function CreateMomozinPageContent() {
                     disabled={isFinishing}
                     className="group flex h-10 flex-[1.6] items-center justify-center gap-1.5 rounded-full bg-[#E6395B] text-[11px] font-bold text-white shadow-[0_7px_18px_rgba(230,57,91,0.18)] transition-all hover:bg-[#D62F50] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:w-[180px] md:h-[46px] md:w-[220px] md:text-xs"
                   >
-                    {isFinishing ? 'Criando...' : 'Criar meu Momozin'}
+                    {isFinishing ? 'Criando...' : 'Criar meu Amorzin'}
                     {!isFinishing && <Heart size={14} fill="currentColor" />}
                   </button>
                 )}
@@ -461,7 +461,7 @@ function CreateMomozinPageContent() {
   )
 }
 
-export default function CreateMomozinPage() {
+export default function CreateAmorzinPage() {
   return (
     <Suspense
       fallback={
@@ -472,7 +472,7 @@ export default function CreateMomozinPage() {
         </main>
       }
     >
-      <CreateMomozinPageContent />
+      <CreateAmorzinPageContent />
     </Suspense>
   )
 }
@@ -530,7 +530,7 @@ interface StepOneProps {
 function StepOne({ loverName, onChange }: StepOneProps) {
   return (
     <div>
-      <StepHeader title="Quem você quer conquistar?" description="Vamos começar pela pessoa que vai receber seu Momozin." />
+      <StepHeader title="Quem você quer conquistar?" description="Vamos começar pela pessoa que vai receber seu Amorzin." />
 
       <div className="rounded-[18px] border border-[#E6395B]/20 bg-white p-5 md:p-7">
         <label className="block text-xs font-semibold text-[#35131F]">Nome</label>
@@ -975,18 +975,18 @@ function PhotoItem({ src, index, onRemove }: PhotoItemProps) {
 ================================================================ */
 
 interface PreviewProps {
-  momozin: MomozinForm
+  Amorzin: AmorzinForm
 }
 
-function Preview({ momozin }: PreviewProps) {
+function Preview({ Amorzin }: PreviewProps) {
   return (
     <div className="flex min-h-[480px] items-center justify-center rounded-[24px] bg-[#FFF5F7] px-5 py-8">
       <div className="w-full max-w-[360px] text-center">
         <div className="relative mx-auto mb-6 h-[120px] w-[120px]">
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E6395B] to-[#9F1835] p-1">
             <div className="h-full w-full overflow-hidden rounded-full border-4 border-white">
-              {momozin.photos[0] ? (
-                <img src={momozin.photos[0]} alt="" className="h-full w-full object-cover" />
+              {Amorzin.photos[0] ? (
+                <img src={Amorzin.photos[0]} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-[#FFE8EE]">💗</div>
               )}
@@ -994,8 +994,8 @@ function Preview({ momozin }: PreviewProps) {
           </div>
         </div>
 
-        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#E6395B]">Um Momozin para</div>
-        <h2 className="font-serif text-2xl font-bold text-[#35131F]">{momozin.loverName || 'Alguém especial'} 💗</h2>
+        <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#E6395B]">Um Amorzin para</div>
+        <h2 className="font-serif text-2xl font-bold text-[#35131F]">{Amorzin.loverName || 'Alguém especial'} 💗</h2>
         <p className="mt-3 text-xs leading-6 text-[#8F747C]">Uma pequena experiência foi preparada especialmente para você.</p>
 
         <div className="mt-6 rounded-2xl border border-[#E8DADD] bg-white p-4 text-left shadow-sm">

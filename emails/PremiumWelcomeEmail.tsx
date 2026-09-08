@@ -4,7 +4,7 @@ export default function PremiumWelcomeEmail({ dashboardUrl }: { dashboardUrl: st
   return (
     <Html>
       <Head />
-      <Preview>Bem-vindo ao Momozin Premium ✨</Preview>
+      <Preview>Bem-vindo ao Amorzin Premium ✨</Preview>
       <Body style={{ backgroundColor: "#FFFCFA", fontFamily: "sans-serif", padding: "40px 0" }}>
         <Container
           style={{
@@ -20,7 +20,7 @@ export default function PremiumWelcomeEmail({ dashboardUrl }: { dashboardUrl: st
             Sua conta Premium está ativa!
           </Heading>
           <Text style={{ fontSize: 14, color: "#8F747C", textAlign: "center", lineHeight: 1.6 }}>
-            Agora você pode criar quantos Momozins quiser, sem pagar de novo por cada um.
+            Agora você pode criar quantos Amorzins quiser, sem pagar de novo por cada um.
           </Text>
           <Section style={{ textAlign: "center", margin: "28px 0" }}>
             <Button

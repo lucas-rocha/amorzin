@@ -436,7 +436,7 @@ export default function CupidGame({
     <div ref={rootRef} className={styles.phoneFrame}>
       <div className={styles.skyDecor} />
 
-      {showWatermark && <div className={styles.watermark}>Feito com Momozin</div>}
+      {showWatermark && <div className={styles.watermark}>Feito com Amorzin</div>}
 
       <div className={styles.hud}>
         <div className={`${styles.hitsCounter} js-hits-counter`}>💘 0 / {requiredHits}</div>

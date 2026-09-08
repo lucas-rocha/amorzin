@@ -1,4 +1,4 @@
-// app/p/[slug]/MomozinSlugClient.tsx
+// app/p/[slug]/AmorzinSlugClient.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import CupidGame from "@/components/CupidGame";
 import { PlanType } from "@prisma/client";
 
-export interface Momozin {
+export interface Amorzin {
   id?: string;
   plan?: PlanType;
   loverName?: string; 
@@ -25,11 +25,11 @@ export interface Momozin {
 const MAX_RETRIES = 6;
 const RETRY_DELAY_MS = 1500;
 
-export default function MomozinSlugClient({ slug }: { slug: string }) {
+export default function AmorzinSlugClient({ slug }: { slug: string }) {
   const searchParams = useSearchParams();
   const justPaid = searchParams.get("paid") === "1";
 
-  const [momozin, setMomozin] = useState<Momozin | null>(null);
+  const [Amorzin, setAmorzin] = useState<Amorzin | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(justPaid);
 
@@ -43,7 +43,7 @@ export default function MomozinSlugClient({ slug }: { slug: string }) {
         if (res.ok) {
           const data = await res.json();
           if (!cancelled) {
-            setMomozin(data);
+            setAmorzin(data);
             setConfirmingPayment(false);
           }
           return;
@@ -77,16 +77,16 @@ export default function MomozinSlugClient({ slug }: { slug: string }) {
   if (notFound) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
-        <p className="text-sm text-[#35131F]">Esse Momozin não existe (ou expirou).</p>
+        <p className="text-sm text-[#35131F]">Esse Amorzin não existe (ou expirou).</p>
       </main>
     );
   }
 
-  if (!momozin) {
+  if (!Amorzin) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
         <p className="text-sm text-[#35131F]">
-          {confirmingPayment ? "Confirmando seu pagamento..." : "Carregando seu Momozin..."}
+          {confirmingPayment ? "Confirmando seu pagamento..." : "Carregando seu Amorzin..."}
         </p>
       </main>
     );
@@ -96,15 +96,15 @@ export default function MomozinSlugClient({ slug }: { slug: string }) {
     <main className="min-h-screen bg-[#FFFCFA]">
       <div className="flex min-h-screen items-center justify-center">
         <CupidGame
-          requiredHits={momozin.requiredHits}
-          targetPhotoUrl={momozin.targetPhotoUrl}
-          couplePhotoUrls={momozin.couplePhotoUrls}
-          hitMessages={momozin.hitMessages}
-          missMessages={momozin.missMessages}
-          finalQuestion={momozin.finalQuestion}
-          finalSub={momozin.finalSub}
-          acceptedTitle={momozin.acceptedTitle}
-          acceptedSub={momozin.acceptedSub}
+          requiredHits={Amorzin.requiredHits}
+          targetPhotoUrl={Amorzin.targetPhotoUrl}
+          couplePhotoUrls={Amorzin.couplePhotoUrls}
+          hitMessages={Amorzin.hitMessages}
+          missMessages={Amorzin.missMessages}
+          finalQuestion={Amorzin.finalQuestion}
+          finalSub={Amorzin.finalSub}
+          acceptedTitle={Amorzin.acceptedTitle}
+          acceptedSub={Amorzin.acceptedSub}
         />
       </div>
     </main>

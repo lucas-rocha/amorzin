@@ -68,7 +68,7 @@ function LoginForm() {
 
           <div className="mb-2 text-center">
             <div className="font-serif text-xl font-bold text-[#35131F]">
-              🏹 Momozin
+              🏹 Amorzin
             </div>
 
             <h1 className="mt-4 font-serif text-2xl font-bold text-[#35131F]">
@@ -76,7 +76,7 @@ function LoginForm() {
             </h1>
 
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#8F747C]">
-              Acesse pra gerenciar seus Momozins.
+              Acesse pra gerenciar seus Amorzins.
             </p>
           </div>
 

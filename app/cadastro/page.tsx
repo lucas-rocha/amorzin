@@ -120,7 +120,7 @@ function SignupPageContent() {
 
           <div className="text-center">
             <div className="font-serif text-xl font-bold text-[#35131F]">
-              🏹 Momozin
+              🏹 Amorzin
             </div>
 
             <h1 className="mt-4 font-serif text-2xl font-bold text-[#35131F]">
@@ -128,7 +128,7 @@ function SignupPageContent() {
             </h1>
 
             <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#8F747C]">
-              Necessário pro plano Premium — gerencie vários Momozins num só
+              Necessário pro plano Premium — gerencie vários Amorzins num só
               lugar.
             </p>
           </div>

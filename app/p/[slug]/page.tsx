@@ -1,6 +1,6 @@
 // app/p/[slug]/page.tsx
 import type { Metadata } from "next";
-import MomozinSlugClient from "./MomozinSlugClient";
+import AmorzinSlugClient from "./AmorzinSlugClient";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const game = await getGameForMetadata(slug);
 
   if (!game) {
-    return { title: "Momozin", robots: { index: false, follow: false } };
+    return { title: "Amorzin", robots: { index: false, follow: false } };
   }
 
   const title = "Alguém preparou uma surpresa pra você 💘";
@@ -49,5 +49,5 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function Page({ params }: PageProps) {
   const { slug } = await params;
-  return <MomozinSlugClient slug={slug} />;
+  return <AmorzinSlugClient slug={slug} />;
 }

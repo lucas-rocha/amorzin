@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "brl",
-            product_data: { name: `Momozin — plano ${planConfig.label}` },
+            product_data: { name: `Amorzin — plano ${planConfig.label}` },
             unit_amount: planConfig.priceCents,
           },
           quantity: 1,

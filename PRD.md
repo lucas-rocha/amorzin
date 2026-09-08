@@ -1,12 +1,12 @@
-# Momozin - Documento de Requisitos (PRD)
+# Amorzin - Documento de Requisitos (PRD)
 
 ## 1. Visão geral
 
-Momozin é um microSaaS que permite ao usuário criar uma página/jogo personalizado no estilo "Flecha do Cupido", com fotos e mensagens próprias, para fazer um pedido de namoro/compromisso ou uma surpresa romântica. O usuário gera uma página com um link único e compartilha com a pessoa que quer conquistar ou surpreender.
+Amorzin é um microSaaS que permite ao usuário criar uma página/jogo personalizado no estilo "Flecha do Cupido", com fotos e mensagens próprias, para fazer um pedido de namoro/compromisso ou uma surpresa romântica. O usuário gera uma página com um link único e compartilha com a pessoa que quer conquistar ou surpreender.
 
 ## 2. Problema e proposta de valor
 
-Pedidos de namoro/compromisso costumam ser feitos de formas genéricas (mensagens de texto, post em rede social). O momozin transforma isso numa experiência interativa e personalizada, fácil de criar (sem precisar programar) e fácil de de compartilhar (um link).
+Pedidos de namoro/compromisso costumam ser feitos de formas genéricas (mensagens de texto, post em rede social). O Amorzin transforma isso numa experiência interativa e personalizada, fácil de criar (sem precisar programar) e fácil de de compartilhar (um link).
 
 ## 3. Público alvo
 - Homens que querem fazer um pedido de compromisso para a companheira/companheiro.
@@ -30,7 +30,7 @@ Pedidos de namoro/compromisso costumam ser feitos de formas genéricas (mensagen
 
 ### Criação e configuração a página
 - **RF01** — O usuário pode se cadastrar e fazer login (e-mail/senha ou OAuth).
-- **RF02** — O usuário pode criar uma nova página/jogo, escolhendo um slug único (ex: `momozin.com/p/joao-e-maria`).
+- **RF02** — O usuário pode criar uma nova página/jogo, escolhendo um slug único (ex: `Amorzin.com/p/joao-e-maria`).
 - **RF03** — O usuário pode fazer upload de um número determinado de fotos-alvo, conforme o limite do seu plano.
 - **RF04** — O usuário pode escolher/editar as mensagens exibidas quando o jogador **erra** o alvo, dentro do limite do seu plano (usuários do plano Grátis usam mensagens padrão do sistema).
 - **RF05** — O usuário pode escolher/editar as mensagens exibidas quando o jogador **acerta** o alvo, dentro do limite do seu plano.
@@ -67,7 +67,7 @@ Pedidos de namoro/compromisso costumam ser feitos de formas genéricas (mensagen
 ## 7. Fluxo do usuário (happy path)
  
 1. Usuário cria conta.
-2. Usuário clica em "Criar novo Momozin".
+2. Usuário clica em "Criar novo Amorzin".
 3. Usuário escolhe/faz upload das fotos-alvo (limitado pelo plano).
 4. Usuário escreve as mensagens de acerto, erro e a mensagem final.
 5. Usuário pré-visualiza o jogo.

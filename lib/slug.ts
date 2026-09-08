@@ -8,5 +8,5 @@ export function generateSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  return `${normalized || "meu-momozin"}-${Math.random().toString(36).substring(2, 7)}`;
+  return `${normalized || "meu-Amorzin"}-${Math.random().toString(36).substring(2, 7)}`;
 }

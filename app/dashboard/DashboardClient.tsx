@@ -58,7 +58,7 @@ export default function DashboardClient({ games, userName }: DashboardClientProp
         {/* header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <div className="font-serif text-lg font-bold text-[#35131F]">🏹 Momozin</div>
+            <div className="font-serif text-lg font-bold text-[#35131F]">🏹 Amorzin</div>
             {userName && (
               <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#8F747C]">
                 Olá, {userName}
@@ -106,14 +106,14 @@ export default function DashboardClient({ games, userName }: DashboardClientProp
           <div className="mb-6 flex items-center gap-3 rounded-2xl border border-[#E6395B]/15 bg-[#FFF8F9] px-4 py-3">
             <Sparkles size={16} className="flex-shrink-0 text-[#E6395B]" />
             <p className="text-xs leading-5 text-[#6E4E58]">
-              <strong className="text-[#35131F]">Vire Premium</strong> e crie quantos Momozins quiser
+              <strong className="text-[#35131F]">Vire Premium</strong> e crie quantos Amorzins quiser
               sem pagar por jogo — pagamento único, pra sempre.
             </p>
           </div>
         )}
 
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="font-serif text-2xl font-bold text-[#35131F]">Seus Momozins</h1>
+          <h1 className="font-serif text-2xl font-bold text-[#35131F]">Seus Amorzins</h1>
           <Link
             href="/criar"
             className="flex items-center gap-1.5 rounded-full bg-[#E6395B] px-4 py-2.5 text-xs font-bold text-white shadow-[0_7px_18px_rgba(230,57,91,0.18)] transition hover:bg-[#D62F50] active:scale-[0.98]"
@@ -125,13 +125,13 @@ export default function DashboardClient({ games, userName }: DashboardClientProp
 
         {games.length === 0 ? (
           <div className="rounded-[24px] border border-dashed border-[#E8DADD] bg-white px-6 py-16 text-center">
-            <p className="text-sm text-[#8F747C]">Você ainda não tem nenhum Momozin por aqui.</p>
+            <p className="text-sm text-[#8F747C]">Você ainda não tem nenhum Amorzin por aqui.</p>
             <Link
               href="/criar"
               className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#E6395B] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#D62F50]"
             >
               <Plus size={14} />
-              Criar meu primeiro Momozin
+              Criar meu primeiro Amorzin
             </Link>
           </div>
         ) : (
@@ -176,7 +176,7 @@ function GameCard({ game }: { game: Game }) {
         </div>
 
         {game.status === "EXPIRED" ? (
-          <p className="mt-3 text-[10px] text-[#E6395B]">O link desse Momozin expirou.</p>
+          <p className="mt-3 text-[10px] text-[#E6395B]">O link desse Amorzin expirou.</p>
         ) : (
           <div className="mt-3 flex gap-2">
             <a

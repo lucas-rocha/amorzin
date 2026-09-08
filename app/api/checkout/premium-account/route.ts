@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: "brl",
-            product_data: { name: "Momozin — conta Premium (pagamento único)" },
+            product_data: { name: "Amorzin — conta Premium (pagamento único)" },
             unit_amount: premiumConfig.priceCents,
           },
           quantity: 1,

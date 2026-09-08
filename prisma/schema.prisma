@@ -1,4 +1,4 @@
-// Momozin — schema inicial (MVP)
+// Amorzin — schema inicial (MVP)
 // Decisão adotada: pagamento único por página (não assinatura recorrente).
 // Cada GamePage "nasce" num plano (Free/Basico/Premium) que define seus limites
 // no momento da criação/compra. Se decidir migrar pra assinatura recorrente,

@@ -1,20 +1,20 @@
-import { Momozin } from "@/app/p/[slug]/MomozinSlugClient";
+import { Amorzin } from "@/app/p/[slug]/AmorzinSlugClient";
 import { ArrowLeft, CheckCircle2, Share2 } from "lucide-react"
 
 interface PaymentScreenProps {
-  momozin: Momozin
+  Amorzin: Amorzin
   onBack: () => void
 }
 
 export default function PaymentScreen({
-  momozin,
+  Amorzin,
   onBack,
 }: PaymentScreenProps) {
   async function handlePay() {
     const res = await fetch("/api/checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gamePageId: momozin.id, plan: momozin.plan }),
+      body: JSON.stringify({ gamePageId: Amorzin.id, plan: Amorzin.plan }),
     });
     const { url } = await res.json();
     window.location.href = url;
@@ -46,7 +46,7 @@ export default function PaymentScreen({
 
           <div className="text-center">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#E6395B]">
-              Seu Momozin está pronto
+              Seu Amorzin está pronto
             </p>
 
             <h1 className="mt-2 font-serif text-2xl font-bold text-[#35131F]">
@@ -54,7 +54,7 @@ export default function PaymentScreen({
             </h1>
 
             <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-[#8F747C]">
-              Para liberar o compartilhamento do seu Momozin,
+              Para liberar o compartilhamento do seu Amorzin,
               finalize o pagamento.
             </p>
           </div>
@@ -62,11 +62,11 @@ export default function PaymentScreen({
           <div className="mt-7 rounded-2xl bg-[#FFF5F7] p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-[#8F747C]">
-                Momozin
+                Amorzin
               </span>
 
               <span className="text-sm font-bold text-[#35131F]">
-                {momozin.loverName}
+                {Amorzin.loverName}
               </span>
             </div>
           </div>
