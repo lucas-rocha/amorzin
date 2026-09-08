@@ -93,20 +93,16 @@ export default function AmorzinSlugClient({ slug }: { slug: string }) {
   }
 
   return (
-    <main className="min-h-screen bg-[#FFFCFA]">
-      <div className="flex min-h-screen items-center justify-center">
-        <CupidGame
-          requiredHits={Amorzin.requiredHits}
-          targetPhotoUrl={Amorzin.targetPhotoUrl}
-          couplePhotoUrls={Amorzin.couplePhotoUrls}
-          hitMessages={Amorzin.hitMessages}
-          missMessages={Amorzin.missMessages}
-          finalQuestion={Amorzin.finalQuestion}
-          finalSub={Amorzin.finalSub}
-          acceptedTitle={Amorzin.acceptedTitle}
-          acceptedSub={Amorzin.acceptedSub}
-        />
-      </div>
-    </main>
+    <CupidGame
+      requiredHits={Amorzin.requiredHits}
+      targetPhotoUrl={Amorzin.targetPhotoUrl}
+      couplePhotoUrls={Amorzin.couplePhotoUrls}
+      hitMessages={Amorzin.hitMessages}
+      missMessages={Amorzin.missMessages}
+      finalQuestion={Amorzin.finalQuestion}
+      finalSub={Amorzin.finalSub}
+      acceptedTitle={Amorzin.acceptedTitle}
+      acceptedSub={Amorzin.acceptedSub}
+    />
   );
 }
