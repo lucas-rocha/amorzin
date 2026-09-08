@@ -327,7 +327,7 @@ export default function LandingPage() {
           <div className="grid items-start gap-4 md:grid-cols-3 md:gap-5">
             <PlanCard
               title="Básico"
-              price="R$24"
+              price="R$19,90"
               suffix="por jogo"
               features={["4 fotos", "link válido por 24 horas", "sem cadastro"]}
               note="com marca d'água"
@@ -335,7 +335,7 @@ export default function LandingPage() {
 
             <PlanCard
               title="Super"
-              price="R$39"
+              price="R$29,90"
               suffix="por jogo"
               highlighted
               features={["10 fotos", "link válido por 1 ano", "sem cadastro", "sem marca d'água"]}
@@ -343,7 +343,7 @@ export default function LandingPage() {
 
             <PlanCard
               title="Premium"
-              price="R$79"
+              price="R$69,90"
               suffix="pagamento único · conta"
               features={[
                 "crie jogos ilimitados",

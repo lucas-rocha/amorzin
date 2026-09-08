@@ -22,7 +22,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowCustomFinalMessage: true,
     watermark: true,
     expiresInDays: 1, // 24 horas
-    priceCents: 2400, // R$24
+    priceCents: 1990, // R$19,90
     requiresAccount: false,
     multiGame: false
   },
@@ -34,8 +34,8 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowCustomFinalMessage: true,
     watermark: false,
     expiresInDays: 365, // 1 ano
-    priceCents: 3900, // ajuste como quiser
-    requiresAccount: false,
+    priceCents: 2990, // R$29,90
+    requiresAccount: false, 
     multiGame: false
   },
   PREMIUM: {
@@ -46,7 +46,7 @@ export const PLAN_LIMITS: Record<PlanType, PlanLimits> = {
     allowCustomFinalMessage: true,
     watermark: false,
     expiresInDays: null, // sem expiração
-    priceCents: 7900, // ajuste como quiser
+    priceCents: 6990, // R$69,90
     requiresAccount: true,
     multiGame: true
   }

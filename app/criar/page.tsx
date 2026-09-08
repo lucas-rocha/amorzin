@@ -405,16 +405,6 @@ function CreateAmorzinPageContent() {
                         onFinalMessageChange={(value) => updateField('finalMessage', value)}
                         onButtonTextChange={(value) => updateField('acceptButtonText', value)}
                       />
-
-                      <div className="mt-7">
-                        <h3 className="mb-3 text-xs font-bold text-[#35131F] md:text-sm">Escolha seu plano</h3>
-                        <PlanPicker
-                          eligiblePlans={eligiblePlans}
-                          recommended={recommended}
-                          selected={selectedPlan}
-                          onSelect={setSelectedPlan}
-                        />
-                      </div>
                     </>
                   )}
                 </div>
