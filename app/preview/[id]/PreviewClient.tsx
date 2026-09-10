@@ -40,18 +40,18 @@ export default function PreviewClient({ gamePageId }: { gamePageId: string }) {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#FFFCFA]">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#FFFCFA] px-4 py-6">
       {data.status === "DRAFT" && (
         <button
           type="button"
           onClick={() => router.push(`/criar?editId=${gamePageId}`)}
-          className="mb-4 flex items-center gap-2 text-sm font-medium text-[#8F747C] transition hover:text-[#E6395B]"
+          className="flex items-center gap-2 self-center text-sm font-medium text-[#8F747C] transition hover:text-[#E6395B]"
         >
           <Pencil size={15} />
           Editar
         </button>
       )}
-      
+
       <CupidGame
         requiredHits={data.requiredHits}
         targetPhotoUrl={data.targetPhotoUrl}
@@ -63,7 +63,6 @@ export default function PreviewClient({ gamePageId }: { gamePageId: string }) {
         acceptedTitle={data.acceptedTitle}
         acceptedSub={data.acceptedSub}
         showWatermark
-        // app/preview/[id]/PreviewClient.tsx — troca o onShare do CupidGame
         onShare={async () => {
           if (session?.user?.isPremiumMember) {
             const res = await fetch(`/api/game-pages/publish/${gamePageId}`, { method: "POST" });

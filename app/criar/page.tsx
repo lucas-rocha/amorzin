@@ -43,10 +43,19 @@ type Step = 1 | 2 | 3 | 4 | 5
 
 type MessageType = 'hitMessages' | 'missMessages'
 
+// uma foto no formulário pode ser: recém-escolhida no navegador (tem `file`,
+// ainda não subiu pro R2) ou já existente de um rascunho salvo (file: null,
+// previewUrl já é a URL real do bucket).
+interface DraftPhoto {
+  id: string
+  previewUrl: string
+  file: File | null
+}
+
 interface AmorzinForm {
   occasion?: Occasion
   loverName: string
-  photos: string[]
+  photos: DraftPhoto[]
   hitMessages: string[]
   missMessages: string[]
   finalMessage: string
@@ -71,6 +80,7 @@ function CreateAmorzinPageContent() {
   const [currentStep, setCurrentStep] = useState<Step>(1)
   const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit')
   const [isFinishing, setIsFinishing] = useState(false)
+  const [finishError, setFinishError] = useState<string | null>(null)
 
   const [gamePageId, setGamePageId] = useState<string | null>(null)
   const [isLoadingDraft, setIsLoadingDraft] = useState(!!editId)
@@ -85,8 +95,6 @@ function CreateAmorzinPageContent() {
     finalMessage: '',
     acceptButtonText: 'SIM! 💗',
   })
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
-  const [uploadError, setUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!editId) return
@@ -104,7 +112,13 @@ function CreateAmorzinPageContent() {
         setAmorzin({
           occasion: draft.occasion,
           loverName: draft.loverName,
-          photos: draft.photos,
+          // fotos que já vêm do rascunho já estão no R2 — file: null significa
+          // "não precisa subir de novo" na hora de finalizar
+          photos: (draft.photos as string[]).map((url) => ({
+            id: crypto.randomUUID(),
+            previewUrl: url,
+            file: null,
+          })),
           hitMessages: draft.hitMessages.length ? draft.hitMessages : defaultHitMessages,
           missMessages: draft.missMessages.length ? draft.missMessages : defaultMissMessages,
           finalMessage: draft.finalMessage,
@@ -115,6 +129,16 @@ function CreateAmorzinPageContent() {
       })
       .catch(() => setIsLoadingDraft(false))
   }, [editId])
+
+  // libera os object URLs locais ao sair da página, evitando vazamento de memória
+  useEffect(() => {
+    return () => {
+      Amorzin.photos.forEach((p) => {
+        if (p.file) URL.revokeObjectURL(p.previewUrl)
+      })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const eligiblePlans = useMemo(() => getEligiblePlans(Amorzin.photos.length), [Amorzin.photos.length])
   const recommended = useMemo(() => getRecommendedPlan(Amorzin.photos.length), [Amorzin.photos.length])
@@ -160,25 +184,24 @@ function CreateAmorzinPageContent() {
     }))
   }
 
-  async function addPhoto(file: File) {
+  // agora é só um preview local, instantâneo — nada de rede aqui.
+  // o upload de verdade só acontece em handleFinish.
+  function addPhoto(file: File) {
     if (Amorzin.photos.length >= MAX_PHOTOS) return
 
-    setIsUploadingPhoto(true)
-    setUploadError(null)
-
-    try {
-      const url = await uploadImageToR2(file)
-      setAmorzin((prev) => ({ ...prev, photos: [...prev.photos, url] }))
-    } catch (err) {
-      console.error(err)
-      setUploadError('Não foi possível enviar a foto. Tenta de novo.')
-    } finally {
-      setIsUploadingPhoto(false)
-    }
+    const previewUrl = URL.createObjectURL(file)
+    setAmorzin((prev) => ({
+      ...prev,
+      photos: [...prev.photos, { id: crypto.randomUUID(), previewUrl, file }],
+    }))
   }
 
   function removePhoto(index: number) {
-    setAmorzin((prev) => ({ ...prev, photos: prev.photos.filter((_, i) => i !== index) }))
+    setAmorzin((prev) => {
+      const photo = prev.photos[index]
+      if (photo.file) URL.revokeObjectURL(photo.previewUrl)
+      return { ...prev, photos: prev.photos.filter((_, i) => i !== index) }
+    })
   }
 
   function goToStep(step: Step) {
@@ -204,15 +227,29 @@ function CreateAmorzinPageContent() {
     if (isFinishing) return
     if (!Amorzin.occasion) { setCurrentStep(1); return }
     if (!Amorzin.loverName.trim()) { setCurrentStep(2); return }
+    if (Amorzin.photos.length === 0) { setCurrentStep(3); return }
     if (!Amorzin.finalMessage.trim()) { setCurrentStep(5); return }
 
     setIsFinishing(true)
+    setFinishError(null)
 
     try {
+      // sobe só as fotos que ainda são um File local; as que já tinham URL
+      // (vindas de um rascunho salvo), reaproveita direto.
+      const resolvedPhotoUrls: string[] = []
+      for (const photo of Amorzin.photos) {
+        if (photo.file) {
+          const url = await uploadImageToR2(photo.file)
+          resolvedPhotoUrls.push(url)
+        } else {
+          resolvedPhotoUrls.push(photo.previewUrl)
+        }
+      }
+
       const payload = {
         occasion: Amorzin.occasion,
         loverName: Amorzin.loverName,
-        photos: Amorzin.photos,
+        photos: resolvedPhotoUrls,
         hitMessages: Amorzin.hitMessages,
         missMessages: Amorzin.missMessages,
         finalMessage: Amorzin.finalMessage,
@@ -237,6 +274,7 @@ function CreateAmorzinPageContent() {
       router.push(`/preview/${id}`)
     } catch (err) {
       console.error(err)
+      setFinishError('Não foi possível enviar as fotos ou salvar. Tenta de novo.')
       setIsFinishing(false)
     }
   }
@@ -381,8 +419,6 @@ function CreateAmorzinPageContent() {
                       onAdd={addPhoto}
                       onRemove={removePhoto}
                       recommended={recommended}
-                      isUploading={isUploadingPhoto}
-                      uploadError={uploadError}
                     />
                   )}
 
@@ -397,21 +433,22 @@ function CreateAmorzinPageContent() {
                   )}
 
                   {currentStep === 5 && (
-                    <>
-                      <StepFour
-                        finalMessage={Amorzin.finalMessage}
-                        acceptButtonText={Amorzin.acceptButtonText}
-                        placeholder={OCCASION_PRESETS[Amorzin.occasion ?? 'pedido'].finalMessagePlaceholder}
-                        onFinalMessageChange={(value) => updateField('finalMessage', value)}
-                        onButtonTextChange={(value) => updateField('acceptButtonText', value)}
-                      />
-                    </>
+                    <StepFour
+                      finalMessage={Amorzin.finalMessage}
+                      acceptButtonText={Amorzin.acceptButtonText}
+                      placeholder={OCCASION_PRESETS[Amorzin.occasion ?? 'pedido'].finalMessagePlaceholder}
+                      onFinalMessageChange={(value) => updateField('finalMessage', value)}
+                      onButtonTextChange={(value) => updateField('acceptButtonText', value)}
+                    />
                   )}
                 </div>
               )}
             </div>
 
             <footer className="border-t border-[#35131F]/[0.07] px-5 py-4 sm:px-7 md:px-10 md:py-6">
+              {finishError && (
+                <p className="mb-3 text-center text-[11px] font-medium text-[#E6395B]">{finishError}</p>
+              )}
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
@@ -438,7 +475,7 @@ function CreateAmorzinPageContent() {
                     disabled={isFinishing}
                     className="group flex h-10 flex-[1.6] items-center justify-center gap-1.5 rounded-full bg-[#E6395B] text-[11px] font-bold text-white shadow-[0_7px_18px_rgba(230,57,91,0.18)] transition-all hover:bg-[#D62F50] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:w-[180px] md:h-[46px] md:w-[220px] md:text-xs"
                   >
-                    {isFinishing ? 'Criando...' : 'Criar meu Amorzin'}
+                    {isFinishing ? 'Enviando fotos...' : 'Criar meu Amorzin'}
                     {!isFinishing && <Heart size={14} fill="currentColor" />}
                   </button>
                 )}
@@ -543,15 +580,13 @@ function StepOne({ loverName, onChange }: StepOneProps) {
 ================================================================ */
 
 interface StepTwoProps {
-  photos: string[]
+  photos: DraftPhoto[]
   onAdd: (file: File) => void
   onRemove: (index: number) => void
   recommended: PlanType
-  isUploading: boolean
-  uploadError: string | null
 }
 
-function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadError }: StepTwoProps) {
+function StepTwo({ photos, onAdd, onRemove, recommended }: StepTwoProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const basicLimit = PLAN_LIMITS.BASICO.maxPhotos
 
@@ -577,7 +612,8 @@ function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadErro
           <div>
             <h2 className="text-[13px] font-bold text-[#35131F] md:text-lg">Fotos do casal</h2>
             <p className="mt-1 text-[10px] leading-4 text-[#8F747C] md:text-xs">
-              Elas aparecem uma a uma a cada acerto — até {MAX_PHOTOS} fotos.
+              Elas aparecem uma a uma a cada acerto — até {MAX_PHOTOS} fotos. Só sobem de
+              verdade quando você finalizar.
             </p>
           </div>
           <span className="whitespace-nowrap rounded-full bg-[#FFE8EE] px-2.5 py-1 text-[9px] font-semibold text-[#E6395B]">
@@ -595,26 +631,19 @@ function StepTwo({ photos, onAdd, onRemove, recommended, isUploading, uploadErro
 
         <div className="flex flex-wrap gap-2.5 md:gap-4">
           {photos.map((photo, index) => (
-            <PhotoItem key={`${photo}-${index}`} src={photo} index={index} onRemove={() => onRemove(index)} />
+            <PhotoItem key={photo.id} src={photo.previewUrl} index={index} onRemove={() => onRemove(index)} />
           ))}
 
           {photos.length < MAX_PHOTOS && (
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="group flex h-[53px] w-[53px] items-center justify-center rounded-[11px] border border-dashed border-[#E6395B]/40 bg-white transition-all hover:border-[#E6395B] hover:bg-[#FFF5F7] active:scale-95 disabled:cursor-wait disabled:opacity-50 md:h-[90px] md:w-[90px] md:rounded-[16px]"
+              className="group flex h-[53px] w-[53px] items-center justify-center rounded-[11px] border border-dashed border-[#E6395B]/40 bg-white transition-all hover:border-[#E6395B] hover:bg-[#FFF5F7] active:scale-95 md:h-[90px] md:w-[90px] md:rounded-[16px]"
             >
-              {isUploading ? (
-                <span className="text-[9px] font-semibold text-[#E6395B]">enviando...</span>
-              ) : (
-                <Plus size={18} strokeWidth={1.5} className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6" />
-              )}
+              <Plus size={18} strokeWidth={1.5} className="text-[#E6395B] transition-transform group-hover:scale-110 md:h-6 md:w-6" />
             </button>
           )}
         </div>
-
-        {uploadError && <p className="mt-2 text-[10px] font-medium text-[#E6395B]">{uploadError}</p>}
 
         <div className="mt-3 text-[9px] text-[#B28F98] md:mt-4 md:text-[10px]">
           {photos.length} de {MAX_PHOTOS} fotos adicionadas
@@ -731,59 +760,6 @@ function StepFour({ finalMessage, acceptButtonText, placeholder, onFinalMessageC
           💡 <strong className="text-[#6E4E58]">Dica:</strong> uma mensagem simples e sincera pode tornar o momento ainda mais especial.
         </p>
       </div>
-    </div>
-  )
-}
-
-/* ===============================================================
-   PLAN PICKER
-================================================================ */
-
-interface PlanPickerProps {
-  eligiblePlans: PlanType[]
-  recommended: PlanType
-  selected: PlanType
-  onSelect: (plan: PlanType) => void
-}
-
-function PlanPicker({ eligiblePlans, recommended, selected, onSelect }: PlanPickerProps) {
-  const allPlans: PlanType[] = ['BASICO', 'SUPER', 'PREMIUM']
-
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      {allPlans.map((key) => {
-        const plan = PLAN_LIMITS[key]
-        const disabled = !eligiblePlans.includes(key)
-        const isSelected = selected === key
-
-        return (
-          <button
-            key={key}
-            type="button"
-            disabled={disabled}
-            onClick={() => onSelect(key)}
-            className={`relative rounded-2xl border p-4 text-left transition ${
-              isSelected ? 'border-[#E6395B] bg-[#FFF5F7]' : 'border-[#E8DADD] bg-white'
-            } ${disabled ? 'cursor-not-allowed opacity-40' : ''}`}
-          >
-            {key === recommended && !disabled && (
-              <span className="absolute -top-2 left-3 rounded-full bg-[#E6395B] px-2 py-0.5 text-[9px] font-bold text-white">
-                RECOMENDADO
-              </span>
-            )}
-            <div className="text-xs font-bold text-[#35131F]">{plan.label}</div>
-            <div className="mt-1 text-lg font-bold text-[#35131F]">{formatPrice(plan.priceCents)}</div>
-            <div className="mt-2 text-[10px] leading-5 text-[#8F747C]">
-              {plan.maxPhotos} fotos ·{' '}
-              {plan.expiresInDays === null ? 'link sem expirar' : `link ${plan.expiresInDays === 1 ? '24h' : `${plan.expiresInDays} dias`}`}
-              {plan.watermark && " · marca d'água"}
-              {plan.requiresAccount && ' · requer conta'}
-              {plan.multiGame && ' · gerencia vários jogos'}
-            </div>
-            {disabled && <div className="mt-2 text-[9px] font-semibold text-[#E6395B]">fotos demais pra esse plano</div>}
-          </button>
-        )
-      })}
     </div>
   )
 }
@@ -976,7 +952,7 @@ function Preview({ Amorzin }: PreviewProps) {
           <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#E6395B] to-[#9F1835] p-1">
             <div className="h-full w-full overflow-hidden rounded-full border-4 border-white">
               {Amorzin.photos[0] ? (
-                <img src={Amorzin.photos[0]} alt="" className="h-full w-full object-cover" />
+                <img src={Amorzin.photos[0].previewUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-[#FFE8EE]">💗</div>
               )}
