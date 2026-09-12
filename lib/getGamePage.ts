@@ -7,9 +7,7 @@ export interface GamePageData {
   hitMessages: string[];
   missMessages: string[];
   finalQuestion: string;
-  finalSub: string;
-  acceptedTitle: string;
-  acceptedSub: string;
+  acceptButtonText: string;
   showWatermark: boolean;
 }
 
@@ -25,9 +23,7 @@ const DEMO_PAGE: GamePageData = {
   ],
   missMessages: ["quase! 💔", "essa quase foi!"],
   finalQuestion: "Quer namorar comigo?",
-  finalSub: "Você é meu amor 💛",
-  acceptedTitle: "Combinado! 💛",
-  acceptedSub: "Prometo fazer você feliz todos os dias.",
+  acceptButtonText: "Sim, eu aceito 💍",
   showWatermark: true
 };
 
@@ -61,9 +57,7 @@ export async function getGamePageBySlug(slug: string): Promise<GamePageData | nu
       hitMessages: page.hitMessages.map((m: { text: string }) => m.text),
       missMessages: page.missMessages.map((m: { text: string }) => m.text),
       finalQuestion: page.finalQuestion,
-      finalSub: page.finalSub,
-      acceptedTitle: page.acceptedTitle,
-      acceptedSub: page.acceptedSub,
+      acceptButtonText: page.acceptButtonText,
       showWatermark: page.plan === "BASICO"
     };
   } catch {

@@ -1,4 +1,5 @@
-// lib/slug.ts
+import { randomUUID } from "crypto";
+
 export function generateSlug(name: string): string {
   const normalized = name
     .normalize("NFD")
@@ -8,5 +9,5 @@ export function generateSlug(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
-  return `${normalized || "meu-Amorzin"}-${Math.random().toString(36).substring(2, 7)}`;
+  return `${normalized || "meu-amorzin"}-${randomUUID()}`;
 }
