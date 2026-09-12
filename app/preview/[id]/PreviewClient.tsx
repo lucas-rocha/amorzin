@@ -14,9 +14,7 @@ interface PreviewData {
   hitMessages: string[];
   missMessages: string[];
   finalQuestion: string;
-  finalSub: string;
-  acceptedTitle: string;
-  acceptedSub: string;
+  acceptButtonText: string;
   requiredHits: number;
 }
 
@@ -59,9 +57,7 @@ export default function PreviewClient({ gamePageId }: { gamePageId: string }) {
         hitMessages={data.hitMessages}
         missMessages={data.missMessages}
         finalQuestion={data.finalQuestion}
-        finalSub={data.finalSub}
-        acceptedTitle={data.acceptedTitle}
-        acceptedSub={data.acceptedSub}
+        acceptButtonText={data.acceptButtonText}
         showWatermark
         onShare={async () => {
           if (session?.user?.isPremiumMember) {

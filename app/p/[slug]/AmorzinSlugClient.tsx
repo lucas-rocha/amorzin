@@ -19,6 +19,7 @@ export interface Amorzin {
   finalSub: string;
   acceptedTitle: string;
   acceptedSub: string;
+  acceptButtonText: string;
   requiredHits: number;
 }
 
@@ -100,9 +101,7 @@ export default function AmorzinSlugClient({ slug }: { slug: string }) {
       hitMessages={Amorzin.hitMessages}
       missMessages={Amorzin.missMessages}
       finalQuestion={Amorzin.finalQuestion}
-      finalSub={Amorzin.finalSub}
-      acceptedTitle={Amorzin.acceptedTitle}
-      acceptedSub={Amorzin.acceptedSub}
+      acceptButtonText={Amorzin.acceptButtonText}
     />
   );
 }

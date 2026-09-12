@@ -28,14 +28,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
   }
   
-
   return NextResponse.json({
     loverName: page.loverName,
     photos: page.targetPhotos.map((p) => p.url),
     hitMessages: page.hitMessages.map((m) => m.text),
     missMessages: page.missMessages.map((m) => m.text),
     finalMessage: page.finalQuestion,
-    acceptButtonText: page.acceptedTitle,
+    acceptButtonText: page.acceptButtonText,
   });
 }
 
@@ -68,6 +67,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         targetPhotos: { create: (body.photos as string[]).map((url, order) => ({ url, order })) },
         hitMessages: { create: (body.hitMessages as string[]).filter(Boolean).map((text, order) => ({ text, order })) },
         missMessages: { create: (body.missMessages as string[]).filter(Boolean).map((text, order) => ({ text, order })) },
+        acceptButtonText: body.acceptButtonText,
       },
     }),
   ]);

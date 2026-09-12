@@ -10,9 +10,7 @@ export interface CupidGameProps {
   hitMessages: string[]
   missMessages: string[]
   finalQuestion: string
-  finalSub: string
-  acceptedTitle: string
-  acceptedSub: string
+  acceptButtonText: string
   showWatermark?: boolean
 
   onShare?: () => void
@@ -36,9 +34,7 @@ export default function CupidGame({
   hitMessages,
   missMessages,
   finalQuestion,
-  finalSub,
-  acceptedTitle,
-  acceptedSub,
+  acceptButtonText,
   showWatermark = false,
   onShare
 }: CupidGameProps) {
@@ -87,7 +83,7 @@ export default function CupidGame({
     let hits = 0,
       misses = 0;
     let dragging = false;
-    let bowTip = { x: 0, y: 0 };
+    const bowTip = { x: 0, y: 0 };
     let aimAngle = -90;
     let sceneRect: DOMRect;
     let hitCollageItems: { url?: string; emoji?: string }[] = [];
@@ -362,7 +358,6 @@ export default function CupidGame({
 
     function showProposal() {
       proposalTitle.textContent = finalQuestion;
-      proposalSub.textContent = finalSub;
       buildCollage();
       startFallingHearts(
         root!.querySelector(".js-falling-hearts-proposal") as HTMLDivElement,
@@ -372,8 +367,6 @@ export default function CupidGame({
     }
 
     function showAccepted() {
-      acceptedTitleEl.textContent = acceptedTitle;
-      acceptedSubEl.textContent = acceptedSub;
       startFallingHearts(root!.querySelector(".js-falling-hearts-final") as HTMLDivElement, 22);
       proposalOverlay.classList.add(styles.hidden);
       acceptedOverlay.classList.remove(styles.hidden);
@@ -501,8 +494,7 @@ export default function CupidGame({
         <div className="js-falling-hearts-proposal" style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }} />
         <div className={`${styles.collage} js-collage`} />
         <h1 className="js-proposal-title">{finalQuestion}</h1>
-        <p className={`${styles.sub} js-proposal-sub`}>{finalSub}</p>
-        <button className={`${styles.btn} js-accept-btn`}>Sim, eu aceito 💍</button>
+        <button className={`${styles.btn} js-accept-btn`}>{acceptButtonText}</button>
       </div>
 
       <div className={`${styles.overlay} ${styles.hidden} js-accepted-overlay`}>
@@ -510,8 +502,6 @@ export default function CupidGame({
         <div className={styles.finalPhoto}>
           <span style={{ fontSize: 44 }}>🥰</span>
         </div>
-        <h1 className="js-accepted-title">{acceptedTitle}</h1>
-        <p className={`${styles.sub} js-accepted-sub`}>{acceptedSub}</p>
         <button className={`${styles.btn} js-share-btn`}>Compartilhar 💌</button>
         <button className={`${styles.btn} ${styles.ghost} js-restart-btn`}>Jogar de novo</button>
       </div>

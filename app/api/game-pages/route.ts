@@ -38,8 +38,7 @@ export async function POST(req: NextRequest) {
       loverName: body.loverName,
       requiredHits: Math.max(couplePhotos.length, 1),
       finalQuestion: body.finalMessage,
-      acceptedTitle: "Você disse SIM! 💗",
-      acceptedSub: "Agora vocês têm uma história para continuar juntos.",
+      acceptButtonText: body.acceptButtonText || "Sim, eu aceito 💍",
       targetPhotos: {
         create: body.photos.map((url, order) => ({ url, order })),
       },

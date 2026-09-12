@@ -57,9 +57,7 @@ model GamePage {
 
   requiredHits  Int         @default(8)
   finalQuestion String      @default("Quer namorar comigo?")
-  finalSub      String      @default("Você é meu amor 💛")
-  acceptedTitle String      @default("Combinado! 💛")
-  acceptedSub   String      @default("Prometo fazer você feliz todos os dias.")
+  acceptButtonText String @default("Sim, eu aceito 💍")
 
   expiresAt     DateTime?   // null = sem expiração (planos pagos)
   createdAt     DateTime    @default(now())

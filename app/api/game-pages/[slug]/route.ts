@@ -31,9 +31,7 @@ export async function GET(
     hitMessages: page.hitMessages.map((m) => m.text),
     missMessages: page.missMessages.map((m) => m.text),
     finalQuestion: page.finalQuestion,
-    finalSub: page.finalSub,
-    acceptedTitle: page.acceptedTitle,
-    acceptedSub: page.acceptedSub,
+    acceptButtonText: page.acceptButtonText, // ← adicionado
     requiredHits: page.requiredHits,
   });
 }
